@@ -1,29 +1,36 @@
 CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -Ivendor/PEGTL/include -Ivendor/fmt/include
+CPPFLAGS = -std=c++17 -O2 -Ivendor/PEGTL/include -Ivendor/fmt/include
+LDFLAGS =
 
 SRCS += main.cc parser.cc
 
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
 PROJECT_ROOT = $(shell pwd)
+TARGET_BIN = build/csvq
+LIBFMT_TGT = build/.libs/fmt/libfmt.a
+LIBS = $(LIBFMT_TGT)
 
-.PHONY: build run clean
+.PHONY: run clean cleanAll
 
-build: build/csvq
+build: $(TARGET_BIN)
 
 clean:
-	rm -rf build $(OBJS)
+	rm -rf $(OBJS)
 
-run: build
-	build/csvq
+cleanAll: clean
+	rm -rf build
 
-build/csvq: $(OBJS) build/.libs/fmt/libfmt.a
+run: $(TARGET_BIN)
+	$(TARGET_BIN)
+
+$(TARGET_BIN): $(OBJS) $(LIBS)
 	mkdir -p build
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-build/.objs/%.o: src/%.cc vendor/PEGTL/include vendor/fmt/include build/.objs
-	$(CXX) $(CPPFLAGS) -o $@ -c $<
+build/.objs/%.o: src/%.cc src/%.hh vendor/PEGTL/include vendor/fmt/include build/.objs
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 build/.objs:
 	mkdir -p $@
@@ -31,7 +38,7 @@ build/.objs:
 vendor/%/include:
 	git submodule update --init --recursive
 
-build/.libs/fmt/libfmt.a: vendor/fmt/include
+$(LIBFMT_TGT): vendor/fmt/include
 	mkdir -p $(dir $@)
 	cd $(dir $@) && cmake $(PROJECT_ROOT)/$(dir $<)
 	make -C $(dir $@) -j6 fmt/fast
