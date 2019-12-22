@@ -1,7 +1,9 @@
 CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -O2 -Ivendor/PEGTL/include -Ivendor/fmt/include
+CPPFLAGS = -std=c++17 -g -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
+
+RUN_ARGS = "cols(A,B); cols!(C,D)"
 
 SRCS += main.cc parser.cc
 
@@ -23,7 +25,7 @@ cleanAll: clean
 	rm -rf build
 
 run: $(TARGET_BIN)
-	$(TARGET_BIN)
+	$(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	mkdir -p build
@@ -34,7 +36,7 @@ build_init: build/.objs
 build/.objs:
 	mkdir -p $@
 
-build/.objs/%.o: src/%.cc src/%.hh vendor/PEGTL/include vendor/fmt/include
+build/.objs/%.o: src/%.cc vendor/PEGTL/include vendor/fmt/include
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 .PRECIOUS: vendor/%/include
@@ -45,4 +47,3 @@ $(LIBFMT_TGT): vendor/fmt/include
 	mkdir -p $(dir $@)
 	cd $(dir $@) && cmake $(PROJECT_ROOT)/$(dir $<)
 	make -C $(dir $@) fmt
-
