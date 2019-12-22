@@ -12,9 +12,9 @@ TARGET_BIN = build/csvq
 LIBFMT_TGT = build/.libs/fmt/libfmt.a
 LIBS = $(LIBFMT_TGT)
 
-.PHONY: run clean cleanAll
+.PHONY: run clean cleanAll build_init
 
-build: $(TARGET_BIN)
+build: build_init $(TARGET_BIN)
 
 clean:
 	rm -rf $(OBJS)
@@ -29,17 +29,20 @@ $(TARGET_BIN): $(OBJS) $(LIBS)
 	mkdir -p build
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-build/.objs/%.o: src/%.cc src/%.hh vendor/PEGTL/include vendor/fmt/include build/.objs
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+build_init: build/.objs
 
 build/.objs:
 	mkdir -p $@
 
+build/.objs/%.o: src/%.cc src/%.hh vendor/PEGTL/include vendor/fmt/include
+	$(CXX) $(CPPFLAGS) -c -o $@ $<
+
+.PRECIOUS: vendor/%/include
 vendor/%/include:
-	git submodule update --init --recursive
+	git submodule update --init --recursive $(dir $@)
 
 $(LIBFMT_TGT): vendor/fmt/include
 	mkdir -p $(dir $@)
 	cd $(dir $@) && cmake $(PROJECT_ROOT)/$(dir $<)
-	make -C $(dir $@) -j6 fmt/fast
+	make -C $(dir $@) fmt
 
