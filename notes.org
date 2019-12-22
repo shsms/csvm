@@ -1,0 +1,17 @@
+#+startup: indent
+* language to implement
+** top-level functions
+*** header
+// header line is optional, type is optional.
+// but type will be deduced if not provided.
+header(A=i64,B=f64,C=str,D=bool);
+*** cols
+cols(A, B);
+!cols(A, B);
+*** select
+select(A != 2 || B > 10));
+select(!A.startswith("test"));
+select(C == "welcome");
+*** addcol
+addcol(E = B + C, F = E - 1, Z = A[1:3])
+** column operations
