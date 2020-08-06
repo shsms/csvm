@@ -2,11 +2,10 @@
 #include <string>
 #include <vector>
 
-namespace sm {
+namespace engine {
 class stmt {
   public:
     virtual void add_ident(const std::string &ident) = 0;
-    virtual void add_type(const std::string &type) = 0;
 };
 
 class colsstmt : stmt {};
@@ -15,7 +14,7 @@ class colsstmt : stmt {};
 // connect to other subsequent tblocks.  Testing only single threaded mode right now.
 typedef std::vector<std::shared_ptr<stmt>> tblock;
 
-class statemachine {
+class engine {
     std::shared_ptr<stmt> curr_stmt;
     tblock curr_block;
     std::vector<tblock> tblocks;

@@ -3,9 +3,10 @@ CXX=g++
 CPPFLAGS = -std=c++17 -g -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
-RUN_ARGS = "cols(A,B); cols!(C,D)"
+# RUN_ARGS = "cols(A,B); !cols(C,D); select(A != B || z==54)"
+RUN_ARGS = "cols(A,B)"
 
-SRCS += main.cc parser.cc
+SRCS += main.cc parser/parser.cc
 
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
@@ -24,16 +25,16 @@ clean:
 cleanAll: clean
 	rm -rf build
 
-run: $(TARGET_BIN)
+run: build_init $(TARGET_BIN)
 	$(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	mkdir -p build
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-build_init: build/.objs
+build_init: build/.objs build/.objs/parser
 
-build/.objs:
+build/.objs build/.objs/parser:
 	mkdir -p $@
 
 build/.objs/%.o: src/%.cc vendor/PEGTL/include vendor/fmt/include

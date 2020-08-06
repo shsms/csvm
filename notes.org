@@ -9,9 +9,9 @@ header(A=i64,B=f64,C=str,D=bool);
 hrename(A=newA)
 *** cols
 cols(A, B);
-cols!(A, B);
+!cols(A, B);
 *** select
-select(A != 2 || B > 10));
+select(A != 2 || B > 10);
 select(!A.startswith("test"));
 select(C == "welcome");
 *** addcol
