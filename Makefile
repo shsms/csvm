@@ -1,12 +1,12 @@
 CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -g -Ivendor/PEGTL/include -Ivendor/fmt/include
+CPPFLAGS = -std=c++20 -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
 # RUN_ARGS = "cols(A,B); !cols(C,D); select(A != B || z==54)"
 RUN_ARGS = "cols(A,B)"
 
-SRCS += main.cc parser/parser.cc
+SRCS = $(shell cd src && find * -type f -name '*.cc')
 
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
@@ -25,7 +25,7 @@ clean:
 cleanAll: clean
 	rm -rf build
 
-run: build_init $(TARGET_BIN)
+run: build
 	$(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)

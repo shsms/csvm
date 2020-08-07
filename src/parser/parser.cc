@@ -1,4 +1,5 @@
 #include "parser.hh"
+#include "../engine.hh"
 #include <fmt/format.h>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
@@ -62,7 +63,7 @@ namespace parser {
     // cols
     struct cols : string<'c', 'o', 'l', 's'> {};
     struct colsstmt
-	: seq<opt<bang>, cols, oparan, list_must<ident, comma, sp>, cparan> {};
+	: seq<cols, opt<bang>, oparan, list_must<ident, comma, sp>, cparan> {};
 
     // select
     struct bool_expr_1 : seq<ident, opt<sp>, op_bool, opt<sp>, sor<ident, constant>>{};
@@ -85,8 +86,8 @@ namespace parser {
 
     template <> struct action<cols> {
 	template <typename Input>
-	static void apply(const Input &in) {
-	    fmt::print("cols: {}\n", in.string());
+	static void apply(const Input &in, engine::engine &e) {
+	    e.new_cols_stmt();
 	}
     };
 
@@ -98,20 +99,20 @@ namespace parser {
     };
 
     template <> struct action<ident> {
-	template <typename Input> static void apply(const Input &in) {
-	    fmt::print("ident: {}\n", in.string());
+	template <typename Input> static void apply(const Input &in, engine::engine &e) {
+	    e.add_ident(in.string());
 	}
     };
 
     template <> struct action<bang> {
-	template <typename Input> static void apply(const Input &in) {
-	    fmt::print("bang: {}\n", in.string());
+	template <typename Input> static void apply(const Input &in, engine::engine &e) {
+	    e.add_bang();
 	}
     };
 
     template <> struct action<colsstmt> {
-	template <typename Input> static void apply(const Input &in) {
-	    fmt::print("colsstmt: {}\n", in.string());
+	template <typename Input> static void apply(const Input &in, engine::engine &e) {
+	    e.finish_stmt();
 	}
     };
 
@@ -133,7 +134,7 @@ namespace parser {
 	}
     };
 
-    void run(const std::string &program) {
+    void run(const std::string &program, engine::engine &e) {
 	if (analyze<pgm>() != 0) {
 	    fmt::print("analyze failed");
 	} else {
@@ -141,7 +142,7 @@ namespace parser {
 	}
 
 	auto inp = string_input(program, "input");
-	parse<pgm, action>(inp);
+	parse<pgm, action>(inp, e);
     }
 
 } // namespace parser
