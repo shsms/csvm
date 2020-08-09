@@ -1,11 +1,13 @@
 #ifndef CSVQ_ENGINE_H
 #define CSVQ_ENGINE_H
 
+#include "colsstmt.hh"
+#include "models.hh"
+#include <algorithm>
+#include <fmt/format.h>
 #include <memory>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include "colsstmt.hh"
 namespace engine {
 
 // TODO: tblock should eventually be a class that has queues to
@@ -23,21 +25,41 @@ class engine {
         curr_stmt =
             std::static_pointer_cast<stmt>(std::make_shared<colsstmt>());
     };
-    
+
     void finish_stmt() { curr_block.emplace_back(curr_stmt); };
-    
+
     void add_ident(const std::string &ident) { curr_stmt->add_ident(ident); };
-    
-    void add_bang() { curr_stmt->add_bang();};
-    
+
+    void add_bang() { curr_stmt->add_bang(); };
+
+    void apply(models::row &row) {
+        auto nextrow = row;
+        for (auto &s : curr_block) {
+            nextrow = s->apply(nextrow);
+        }
+        for (auto &val : nextrow)
+            fmt::print("{},", val);
+        fmt::print("\n");
+    }
+
     std::string string() {
         std::string ret;
         int ctr = 1;
-        std::ranges::for_each(curr_block, [&](auto &a) {
-            ret += std::to_string(ctr++) + ". " + a->string();
-        });
+        for (auto &s : curr_block) {
+            ret += std::to_string(ctr++) + ". " + s->string();
+        }
         return ret;
     };
+
+    void set_header(const models::row &h) {
+        auto nextrow = h;
+        for (auto &s : curr_block) {
+            nextrow = s->set_header(nextrow);
+        }
+        for (auto &val : nextrow)
+            fmt::print("{},", val);
+        fmt::print("\n");
+    }
 };
 } // namespace engine
 

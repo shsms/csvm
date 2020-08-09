@@ -1,43 +1,41 @@
 CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++20 -Ivendor/PEGTL/include -Ivendor/fmt/include
+CPPFLAGS = -std=c++17 -g -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
 # RUN_ARGS = "cols(A,B); !cols(C,D); select(A != B || z==54)"
-RUN_ARGS = "cols(A,B)"
+RUN_ARGS = "cols(D,B)"
 
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
 PROJECT_ROOT = $(shell pwd)
-TARGET_BIN = build/csvq
+TARGET_BIN = bin/csvq
 LIBFMT_TGT = build/.libs/fmt/libfmt.a
 LIBS = $(LIBFMT_TGT)
 
-.PHONY: run clean cleanAll build_init
+.PHONY: run clean cleanAll
 
-build: build_init $(TARGET_BIN)
+build: $(TARGET_BIN)
 
 clean:
 	rm -rf $(OBJS)
 
 cleanAll: clean
-	rm -rf build
+	rm -rf build bin
 
 run: build
 	$(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
-	mkdir -p build
+	mkdir -p $(shell dirname $@)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
-build_init: build/.objs build/.objs/parser
+build/.objs/%.mkdir: src/%.cc
+	mkdir -p $(shell dirname $@)
 
-build/.objs build/.objs/parser:
-	mkdir -p $@
-
-build/.objs/%.o: src/%.cc vendor/PEGTL/include vendor/fmt/include
+build/.objs/%.o: src/%.cc build/.objs/%.mkdir vendor/PEGTL/include vendor/fmt/include
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 .PRECIOUS: vendor/%/include
