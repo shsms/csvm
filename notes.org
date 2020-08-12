@@ -1,4 +1,4 @@
-#+startup: indent
+#+startup: indent showall
 * language to implement
 ** top-level functions
 *** header

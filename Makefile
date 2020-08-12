@@ -4,7 +4,7 @@ CPPFLAGS = -std=c++17 -g -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
 # RUN_ARGS = "cols(A,B); !cols(C,D); select(A != B || z==54)"
-RUN_ARGS = "cols(D,B)"
+RUN_ARGS = "cols(D,B,C,E); !cols(C)"
 
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 
@@ -17,7 +17,7 @@ LIBS = $(LIBFMT_TGT)
 
 .PHONY: run clean cleanAll
 
-build: $(TARGET_BIN)
+build: bin $(TARGET_BIN)
 
 clean:
 	rm -rf $(OBJS)
@@ -29,13 +29,15 @@ run: build
 	$(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
-	mkdir -p $(shell dirname $@)
 	$(CXX) $(LDFLAGS) -o $@ $^
+
+bin:
+	mkdir bin
 
 build/.objs/%.mkdir: src/%.cc
 	mkdir -p $(shell dirname $@)
 
-build/.objs/%.o: src/%.cc build/.objs/%.mkdir vendor/PEGTL/include vendor/fmt/include
+build/.objs/%.o: src/%.cc src/%.hh build/.objs/%.mkdir vendor/PEGTL/include vendor/fmt/include
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 .PRECIOUS: vendor/%/include

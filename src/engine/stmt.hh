@@ -1,5 +1,10 @@
-#include "models.hh"
+#ifndef CSVQ_STMT_H
+#define CSVQ_STMT_H
+
+#include "../models/models.hh"
 #include <string>
+
+namespace engine {
 
 class stmt {
   public:
@@ -10,3 +15,6 @@ class stmt {
     virtual models::row apply(const models::row &) = 0;
     // virtual void apply(); // TODO: should take row and return row
 };
+
+} // namespace engine
+#endif
