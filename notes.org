@@ -1,19 +1,26 @@
-#+startup: indent showall
+#+startup: indent showall logdrawer
 * language to implement
 ** top-level functions
+*** DONE cols
+:LOGBOOK:
+- State "DONE"       from "DONE"       [2020-08-13 Thu 20:06]
+:END:
+cols(A, B);
+!cols(A, B);
+*** TODO select
+:LOGBOOK:
+- State "TODO"       from "TODO"       [2020-08-13 Thu 20:06]
+:END:
+select(A != 2 || B > 10);
+select(!A.startswith("test"));
+select(C == "welcome");
+*** numeric(A,C,D)
 *** header
 // header line is optional, type is optional.
 // but type will be deduced if not provided.
 header(A=i64,B=f64,C=str,D=bool);
 *** hrename
 hrename(A=newA)
-*** cols
-cols(A, B);
-!cols(A, B);
-*** select
-select(A != 2 || B > 10);
-select(!A.startswith("test"));
-select(C == "welcome");
 *** addcol
 addcol(E = B + C, F = E - 1, Z = A[1:3])
 ** column operations

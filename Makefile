@@ -1,10 +1,10 @@
 CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -g -Ivendor/PEGTL/include -Ivendor/fmt/include
+CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
-# RUN_ARGS = "cols(A,B); !cols(C,D); select(A != B || z==54)"
-RUN_ARGS = "cols(D,B,C,E); !cols(C)"
+RUN_ARGS = "select(A != B || (z==54 && ww != \"zzz\"))"
+# RUN_ARGS = "cols(date,arrTm,ticker, type, trdPx, trdSz, trdTm)"
 
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 

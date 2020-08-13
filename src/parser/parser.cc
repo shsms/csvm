@@ -84,25 +84,25 @@ struct bool_expr_1
 struct str_compare_expr_1
     : seq<opt<bang>, ident, dot, ident, oparan, str_lit, cparan> {};
 struct any_bool_expr_1 : sor<bool_expr_1, str_compare_expr_1> {};
-struct bool_expr_multi_noparan : list_must<any_bool_expr_1, op_and_or, sp> {};
+struct bool_expr_multi_noparan : list<any_bool_expr_1, op_and_or, sp> {};
 struct bool_expr_multi_paran
-    : seq<oparan, sp, bool_expr_multi_noparan, cparan> {};
+    : seq<oparan, opt<sp>, bool_expr_multi_noparan, opt<sp>, cparan> {};
 struct bool_expr_multi : sor<bool_expr_multi_paran, bool_expr_multi_noparan> {};
 struct bool_expr : list_must<bool_expr_multi, op_and_or, sp> {};
 struct select : string<'s', 'e', 'l', 'e', 'c', 't'> {};
 struct selectstmt : seq<select, oparan, bool_expr, cparan> {};
+
+template <> struct action<selectstmt> {
+    template <typename Input> static void apply(const Input &in, engine::engine &e) {
+        fmt::print("select: {}\n", in.string());
+    }
+};
 
 // generic
 struct anystmt : sor<colsstmt, selectstmt> {};
 struct block : list<anystmt, semi, sp> {};
 struct thread_block : seq<obrace, sps, block, sps, cbrace, sps> {};
 struct pgm : must<sor<block, star<thread_block>>, eof> {};
-
-template <> struct action<select> {
-    template <typename Input> static void apply(const Input &in) {
-        fmt::print("select: {}\n", in.string());
-    }
-};
 
 template <> struct action<ident> {
     template <typename Input>

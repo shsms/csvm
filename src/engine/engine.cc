@@ -22,9 +22,9 @@ void engine::apply(models::row &row) {
     }
     for (auto ii = 0; ii < nextrow.size(); ii++)
         if (ii == 0) // TODO compare with print first col outside loop
-            fmt::print("{}", nextrow[ii]);
+	    models::print("{}", nextrow[ii]);
         else
-            fmt::print(",{}", nextrow[ii]);
+	    models::print(",{}", nextrow[ii]);
     fmt::print("\n");
 }
 
@@ -44,9 +44,9 @@ void engine::set_header(const models::row &h) {
     }
     for (auto ii = 0; ii < nextrow.size(); ii++)
         if (ii == 0) // TODO compare with print first col outside loop
-            fmt::print("{}", nextrow[ii]);
+            models::print("{}", nextrow[ii]);
         else
-            fmt::print(",{}", nextrow[ii]);
+            models::print(",{}", nextrow[ii]);
     fmt::print("\n");
 }
 

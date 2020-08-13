@@ -8,7 +8,7 @@ struct csv {
     models::row header;
     models::row curr_row;
     void set_header();
-    void add_value(const std::string &);
+    void add_value(std::string&&);
     void new_row();
 };
 

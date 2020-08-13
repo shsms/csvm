@@ -33,7 +33,8 @@ models::row colsstmt::set_header(const models::row &h) {
     for (auto &col : columns) {
         bool found = false;
         for (auto ii = 0; ii < h.size(); ii++) {
-            if (col == h[ii]) {
+            if (models::string_equal(col, h[ii])) {
+            // if (col== h[ii]) {
                 col_pos.push_back(ii);
                 out_headers.push_back(h[ii]);
                 found = true;
@@ -51,7 +52,8 @@ models::row colsstmt::set_exclude_header(const models::row &h) {
     for (auto ii = 0; ii < h.size(); ii++) {
         bool found = false;
         for (auto &col : columns) {
-            if (col == h[ii]) {
+            if (models::string_equal(col, h[ii])) {
+            // if (col== h[ii]) {
                 found = true;
                 break;
             }

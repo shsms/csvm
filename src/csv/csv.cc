@@ -24,26 +24,27 @@ struct hfile : seq<header_line, file> {};
 template <typename Rule> struct action {};
 
 template <> struct action<header_value> {
-    template <typename Input> static void apply(const Input &in, csv &parser) {
-        parser.header.push_back(in.string());
+    template <typename Input> static void apply(const Input &in, csv &csv) {
+        csv.header.emplace_back(
+            models::value{.type = models::string_t, .string_v = in.string()});
     }
 };
 
 template <> struct action<header_line> {
-    template <typename Input> static void apply(const Input &in, csv &parser) {
-        parser.set_header();
+    template <typename Input> static void apply(const Input &in, csv &csv) {
+        csv.set_header();
     }
 };
 
 template <> struct action<value> {
-    template <typename Input> static void apply(const Input &in, csv &parser) {
-        parser.add_value(in.string());
+    template <typename Input> static void apply(const Input &in, csv &csv) {
+        csv.add_value(std::move(in.string()));
     }
 };
 
 template <> struct action<line> {
-    template <typename Input> static void apply(const Input &in, csv &parser) {
-        parser.new_row();
+    template <typename Input> static void apply(const Input &in, csv &csv) {
+        csv.new_row();
     }
 };
 
@@ -53,13 +54,16 @@ void run(const std::string &csvfile, engine::engine &e) {
     // } else {
     //     fmt::print("analyze success\n");
     // }
-    csv parser = {.e = e};
+    csv csv = {.e = e};
     file_input in(csvfile);
-    parse<hfile, action>(in, parser);
+    parse<hfile, action>(in, csv);
 }
 
-void csv::add_value(const std::string &v) { curr_row.push_back(v); }
-void csv::set_header() { e.set_header(header); }
+inline void csv::add_value(std::string &&v) {
+    curr_row.emplace_back(
+        models::value{.type = models::string_t, .string_v = std::move(v)});
+}
+inline void csv::set_header() { e.set_header(header); }
 void csv::new_row() {
     e.apply(curr_row);
     curr_row.clear();
