@@ -27,7 +27,7 @@ namespace engine {
 
     void selectstmt::finalize() {
 	while (!stack.empty()) {
-	    steps.push_back(stack.top());
+	    steps.emplace_back(stack.top());
 	    stack.pop();
 	}
     }
@@ -42,14 +42,14 @@ namespace engine {
 	return h;
     }
 
-    models::row selectstmt::apply(const models::row &row) {
+    bool selectstmt::apply(models::row &row) {
 	for (auto step : steps) {
 	    step->apply(row, eval_stack);
 	}
 	if (auto [sel,ok] = models::get_bool_value(eval_stack.top()); sel&&ok) {
-	    return row;
+	    return true;
 	}
-	return models::row();
+	return false;
     }
 
     

@@ -57,15 +57,19 @@ void run(const std::string &csvfile, engine::engine &e) {
     csv csv = {.e = e};
     file_input in(csvfile);
     parse<hfile, action>(in, csv);
+    e.cleanup();
 }
 
 inline void csv::add_value(std::string &&v) {
     curr_row.emplace_back(
         models::value{.type = models::string_t, .string_v = std::move(v)});
 }
+
 inline void csv::set_header() { e.set_header(header); }
+
 void csv::new_row() {
     e.apply(curr_row);
     curr_row.clear();
 }
+
 } // namespace csv

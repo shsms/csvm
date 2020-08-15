@@ -17,6 +17,7 @@ class engine {
     std::shared_ptr<stmt> curr_stmt;
     tblock curr_block;
     std::vector<tblock> tblocks;
+    std::string print_buffer;
 
   public:
     void new_cols_stmt();
@@ -26,7 +27,9 @@ class engine {
     void add_str(const std::string &ident);
     void add_bang();
     void add_oper(const std::string &);
+
     void apply(models::row &row);
+    void cleanup();
     std::string string();
     void set_header(const models::row &h);
 };

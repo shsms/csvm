@@ -2,6 +2,7 @@
 #include "../models/models.hh"
 #include "colsstmt.hh"
 #include "selectstmt.hh"
+#include <iostream>
 
 namespace engine {
 void engine::new_cols_stmt() {
@@ -31,18 +32,25 @@ void engine::add_oper(const std::string &oper) {
 }
 
 void engine::apply(models::row &row) {
-    auto nextrow = row;
+    bool keep = true;
     for (auto &s : curr_block) {
-        nextrow = s->apply(nextrow);
+	keep = s->apply(row);
     }
-    if (nextrow.empty())
+    if (keep == false) {
 	return;
-    for (auto ii = 0; ii < nextrow.size(); ii++)
-        if (ii == 0) // TODO compare with print first col outside loop
-	    models::print("{}", nextrow[ii]);
-        else
-	    models::print(",{}", nextrow[ii]);
-    fmt::print("\n");
+    }
+    static const std::string comma_str = ",";
+    static const std::string newline = "\n";
+    if (print_buffer.length() >= 1e4) {
+	std::cout << print_buffer;
+	print_buffer.clear();
+    }
+    for (auto ii = 0; ii < row.size(); ii++)
+	if (ii == 0)
+	    print_buffer += row[ii].string_v;
+	else
+	    print_buffer += comma_str + row[ii].string_v;
+    print_buffer += newline;
 }
 
 std::string engine::string() {
@@ -65,6 +73,11 @@ void engine::set_header(const models::row &h) {
         else
             models::print(",{}", nextrow[ii]);
     fmt::print("\n");
+}
+
+void engine::cleanup() {
+    if (print_buffer.length() > 0)
+	std::cout << print_buffer;
 }
 
 } // namespace engine

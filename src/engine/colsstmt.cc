@@ -66,13 +66,14 @@ models::row colsstmt::set_exclude_header(const models::row &h) {
     return out_headers;
 }
 
-models::row colsstmt::apply(const models::row &row) {
+bool colsstmt::apply(models::row &row) {
     models::row ret;
     if (!row.empty())
 	for (auto pos : col_pos) {
 	    ret.push_back(row[pos]);
 	}
-    return ret;
+    row = std::move(ret);
+    return true;
 }
 
 } // namespace engine

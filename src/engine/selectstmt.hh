@@ -17,6 +17,6 @@ public:
     void finalize() override;
     std::string string() override;
     models::row set_header(const models::row &h) override;
-    models::row apply(const models::row &) override;
+    bool apply(models::row &) override;
 };
 }

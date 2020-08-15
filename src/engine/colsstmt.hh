@@ -27,7 +27,7 @@ class colsstmt : public stmt {
     std::string string();
     
     models::row set_header(const models::row &h);
-    models::row apply(const models::row &row);
+    bool apply(models::row &row);
 };
 
 } // namespace engine

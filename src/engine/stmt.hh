@@ -17,7 +17,7 @@ class stmt {
 
     virtual std::string string() = 0;
 
-    virtual models::row apply(const models::row &) = 0;
+    virtual bool apply(models::row &) = 0;
 };
 
 } // namespace engine
