@@ -20,9 +20,12 @@ class engine {
 
   public:
     void new_cols_stmt();
+    void new_select_stmt();
     void finish_stmt();
     void add_ident(const std::string &ident);
+    void add_str(const std::string &ident);
     void add_bang();
+    void add_oper(const std::string &);
     void apply(models::row &row);
     std::string string();
     void set_header(const models::row &h);

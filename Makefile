@@ -3,8 +3,8 @@ CXX=g++
 CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
-RUN_ARGS = "select(A != B || (z==54 && ww != \"zzz\"))"
-# RUN_ARGS = "cols(date,arrTm,ticker, type, trdPx, trdSz, trdTm)"
+#RUN_ARGS = "select(D == 'field5'); !cols(D)"
+RUN_ARGS = " cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);select(type=='q');"
 
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 
@@ -26,7 +26,7 @@ cleanAll: clean
 	rm -rf build bin
 
 run: build
-	$(TARGET_BIN) $(RUN_ARGS)
+	@$(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	$(CXX) $(LDFLAGS) -o $@ $^

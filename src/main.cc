@@ -8,6 +8,6 @@ int main(int argc, char *argv[]) {
         engine::engine e;
 	fmt::print(e.string());
         parser::run(argv[1], e);
-        csv::run("test.csv", e);
+        csv::run("tq.csv", e);
     }
 }

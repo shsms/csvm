@@ -14,15 +14,19 @@ class colsstmt : public stmt {
 
     bool exclude;
 
+    models::row set_exclude_header(const models::row &h);
   public:
     colsstmt();
     virtual ~colsstmt(){};
 
     void add_ident(const std::string &col);
-    std::string string();
+    void add_str(const std::string&) {}
+    void add_oper(const std::string &) {}
     void add_bang();
+    void finalize() {};
+    std::string string();
+    
     models::row set_header(const models::row &h);
-    models::row set_exclude_header(const models::row &h);
     models::row apply(const models::row &row);
 };
 

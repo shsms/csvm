@@ -68,9 +68,10 @@ models::row colsstmt::set_exclude_header(const models::row &h) {
 
 models::row colsstmt::apply(const models::row &row) {
     models::row ret;
-    for (auto pos : col_pos) {
-        ret.push_back(row[pos]);
-    }
+    if (!row.empty())
+	for (auto pos : col_pos) {
+	    ret.push_back(row[pos]);
+	}
     return ret;
 }
 

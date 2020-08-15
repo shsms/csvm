@@ -92,15 +92,21 @@ struct bool_expr : list_must<bool_expr_multi, op_and_or, sp> {};
 struct select : string<'s', 'e', 'l', 'e', 'c', 't'> {};
 struct selectstmt : seq<select, oparan, bool_expr, cparan> {};
 
-template <> struct action<selectstmt> {
-    template <typename Input> static void apply(const Input &in, engine::engine &e) {
-        fmt::print("select: {}\n", in.string());
+template <> struct control<selectstmt> : normal<selectstmt> {
+    template <typename Input>
+    static void start(const Input &, engine::engine &e) {
+        e.new_select_stmt();
+    }
+    template <typename Input>
+    static void success(const Input &, engine::engine &e) {
+        e.finish_stmt();
     }
 };
 
+
 // generic
 struct anystmt : sor<colsstmt, selectstmt> {};
-struct block : list<anystmt, semi, sp> {};
+struct block : seq<opt<sp>, list<anystmt, semi, sp>, opt<semi>> {};
 struct thread_block : seq<obrace, sps, block, sps, cbrace, sps> {};
 struct pgm : must<sor<block, star<thread_block>>, eof> {};
 
@@ -115,6 +121,20 @@ template <> struct action<bang> {
     template <typename Input>
     static void apply(const Input &in, engine::engine &e) {
         e.add_bang();
+    }
+};
+
+template <> struct action<op_bool> {
+    template <typename Input>
+    static void apply(const Input &in, engine::engine &e) {
+        e.add_oper(in.string());
+    }
+};
+
+template <> struct action<str_lit> {
+    template <typename Input>
+    static void apply(const Input &in, engine::engine &e) {
+        e.add_str(in.string());
     }
 };
 
