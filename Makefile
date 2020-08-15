@@ -3,8 +3,9 @@ CXX=g++
 CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS =
 
-#RUN_ARGS = "select(D == 'field5'); !cols(D)"
-RUN_ARGS = " cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);select(type=='q');"
+#RUN_ARGS = "select(E >= '303' || B == D); !cols(D)"
+#RUN_ARGS="select(a == z || (b == c && d==w))"
+RUN_ARGS = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
 
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 

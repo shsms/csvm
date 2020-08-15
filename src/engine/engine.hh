@@ -23,10 +23,14 @@ class engine {
     void new_cols_stmt();
     void new_select_stmt();
     void finish_stmt();
-    void add_ident(const std::string &ident);
-    void add_str(const std::string &ident);
+
+    void add_ident(const std::string &);
+    void add_str(const std::string &);
+    void add_num(const std::string &);
     void add_bang();
     void add_oper(const std::string &);
+    void begin_method(const std::string &);
+    void end_method();
 
     void apply(models::row &row);
     void cleanup();

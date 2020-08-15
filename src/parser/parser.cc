@@ -21,23 +21,27 @@ struct bang : one<'!'> {};
 
 // boolean operators
 struct op_ne : string<'!', '='> {};
-struct op_eq : string<'=', '='> {};
+struct op_eq : two<'='> {};
 struct op_gt : one<'>'> {};
 struct op_lt : one<'<'> {};
 struct op_gte : string<'>', '='> {};
 struct op_lte : string<'<', '='> {};
-struct op_bool : sor<op_eq, op_ne, op_gt, op_lt, op_lte, op_gte> {};
-
 struct op_and : two<'&'> {};
 struct op_or : two<'|'> {};
-struct op_and_or : sor<op_and, op_or> {};
+struct op_assign : equ {};
+struct op_regex : string<'=', '~'> {};
+struct op_bool : sor<op_eq, op_ne, op_lte, op_gte, op_gt, op_lt, op_and, op_or, op_regex, op_assign> {};
 
 struct ident_first : ranges<'a', 'z', 'A', 'Z'> {};
+struct ident_uscore : ranges<'a', 'z', 'A', 'Z', '_'> {};
 struct ident_other : ranges<'a', 'z', 'A', 'Z', '0', '9', '_'> {};
 struct ident : seq<ident_first, star<ident_other>> {};
 struct full_ident : list_must<ident, dot> {};
 
-struct int_lit : seq<range<'1', '9'>, star<digit>> {};
+struct uint_lit : seq<digit, star<digit>> {};
+struct sign : one<'+', '-'> {};
+    struct int_lit : seq<opt<sign>, uint_lit> {};
+    struct float_lit : seq<int_lit, opt<seq<dot, int_lit>>> {};
 struct char_escape : one<'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"'> {};
 struct escape : if_must<one<'\\'>, char_escape> {};
 struct char_value : sor<escape, not_one<'\n', '\0'>> {};
@@ -50,8 +54,7 @@ struct bool_lit
     : seq<sor<string<'t', 'r', 'u', 'e'>, string<'f', 'a', 'l', 's', 'e'>>,
           not_at<ident_other>> {};
 
-struct sign : one<'+', '-'> {};
-struct constant : sor<bool_lit, seq<opt<sign>, int_lit>, str_lit> {};
+struct constant : sor<bool_lit, seq<float_lit>, str_lit> {};
 
 struct oparan : one<'('> {};
 struct cparan : one<')'> {};
@@ -79,18 +82,12 @@ template <> struct control<colsstmt> : normal<colsstmt> {
 };
 
 // select
-struct bool_expr_1
-    : seq<ident, opt<sp>, op_bool, opt<sp>, sor<ident, constant>> {};
-struct str_compare_expr_1
-    : seq<opt<bang>, ident, dot, ident, oparan, str_lit, cparan> {};
-struct any_bool_expr_1 : sor<bool_expr_1, str_compare_expr_1> {};
-struct bool_expr_multi_noparan : list<any_bool_expr_1, op_and_or, sp> {};
-struct bool_expr_multi_paran
-    : seq<oparan, opt<sp>, bool_expr_multi_noparan, opt<sp>, cparan> {};
-struct bool_expr_multi : sor<bool_expr_multi_paran, bool_expr_multi_noparan> {};
-struct bool_expr : list_must<bool_expr_multi, op_and_or, sp> {};
+struct expr;
+struct expr_group : if_must<oparan, expr, cparan> {};
+struct expr_item : sor<ident, constant, expr_group>{};
+struct expr : list<expr_item, op_bool, sp>{};
 struct select : string<'s', 'e', 'l', 'e', 'c', 't'> {};
-struct selectstmt : seq<select, oparan, bool_expr, cparan> {};
+struct selectstmt : seq<select, oparan, expr, cparan> {};
 
 template <> struct control<selectstmt> : normal<selectstmt> {
     template <typename Input>
@@ -103,6 +100,23 @@ template <> struct control<selectstmt> : normal<selectstmt> {
     }
 };
 
+template <> struct control<expr_group> : normal<expr_group> {
+    template <typename Input>
+    static void start(const Input &, engine::engine &e) {
+        e.add_oper("(");
+    }
+    template <typename Input>
+    static void success(const Input &, engine::engine &e) {
+        e.add_oper(")");
+    }
+};
+
+template <> struct action<op_bool> {
+    template <typename Input>
+    static void apply(const Input &in, engine::engine &e) {
+        e.add_oper(in.string());
+    }
+};
 
 // generic
 struct anystmt : sor<colsstmt, selectstmt> {};
@@ -124,13 +138,6 @@ template <> struct action<bang> {
     }
 };
 
-template <> struct action<op_bool> {
-    template <typename Input>
-    static void apply(const Input &in, engine::engine &e) {
-        e.add_oper(in.string());
-    }
-};
-
 template <> struct action<str_lit> {
     template <typename Input>
     static void apply(const Input &in, engine::engine &e) {
@@ -140,19 +147,16 @@ template <> struct action<str_lit> {
 
 template <> struct action<block> {
     template <typename Input> static void apply(const Input &in) {
-        fmt::print("block: {}\n", in.string());
     }
 };
 
 template <> struct action<thread_block> {
     template <typename Input> static void apply(const Input &in) {
-        fmt::print("thread_block: {}\n", in.string());
     }
 };
 
 template <> struct action<pgm> {
     template <typename Input> static void apply(const Input &in) {
-        fmt::print("pgm: {}\n", in.string());
     }
 };
 

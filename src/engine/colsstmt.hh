@@ -15,19 +15,21 @@ class colsstmt : public stmt {
     bool exclude;
 
     models::row set_exclude_header(const models::row &h);
+
   public:
     colsstmt();
     virtual ~colsstmt(){};
 
-    void add_ident(const std::string &col);
-    void add_str(const std::string&) {}
-    void add_oper(const std::string &) {}
-    void add_bang();
-    void finalize() {};
-    std::string string();
-    
-    models::row set_header(const models::row &h);
-    bool apply(models::row &row);
+    void add_ident(const std::string &col) override;
+    void add_str(const std::string &) override {}
+    void add_num(const std::string &) override {}
+    void add_oper(const std::string &) override {}
+    void add_bang() override;
+    void finalize() override{};
+    std::string string() override;
+
+    models::row set_header(const models::row &h) override;
+    bool apply(models::row &row) override;
 };
 
 } // namespace engine
