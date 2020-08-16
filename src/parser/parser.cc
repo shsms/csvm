@@ -1,5 +1,9 @@
 #include "parser.hh"
 #include "../engine/engine.hh"
+#include "../engine/colsstmt.hh"
+#include "../engine/selectstmt.hh"
+#include "../engine/to_num_stmt.hh"
+#include "../engine/to_str_stmt.hh"
 #include <fmt/format.h>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
@@ -38,10 +42,11 @@ struct ident_other : ranges<'a', 'z', 'A', 'Z', '0', '9', '_'> {};
 struct ident : seq<ident_first, star<ident_other>> {};
 struct full_ident : list_must<ident, dot> {};
 
-struct uint_lit : seq<digit, star<digit>> {};
+struct uint_lit : plus<digit> {};
 struct sign : one<'+', '-'> {};
     struct int_lit : seq<opt<sign>, uint_lit> {};
-    struct float_lit : seq<int_lit, opt<seq<dot, int_lit>>> {};
+    struct float_lit : seq<int_lit, opt<seq<dot, uint_lit>>> {};
+struct num_lit : sor<int_lit, float_lit> {};
 struct char_escape : one<'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"'> {};
 struct escape : if_must<one<'\\'>, char_escape> {};
 struct char_value : sor<escape, not_one<'\n', '\0'>> {};
@@ -54,7 +59,7 @@ struct bool_lit
     : seq<sor<string<'t', 'r', 'u', 'e'>, string<'f', 'a', 'l', 's', 'e'>>,
           not_at<ident_other>> {};
 
-struct constant : sor<bool_lit, seq<float_lit>, str_lit> {};
+struct constant : sor<num_lit, str_lit> {};
 
 struct oparan : one<'('> {};
 struct cparan : one<')'> {};
@@ -65,6 +70,39 @@ template <typename Rule> struct action {};
 template <typename Rule> struct control : normal<Rule> {};
 
 // instructions
+// to_num
+struct to_num : string<'t', 'o', '_', 'n', 'u', 'm'> {};
+struct to_num_stmt
+    : seq<opt<bang>, to_num, oparan, list_must<ident, comma, sp>, cparan> {};
+
+template <> struct control<to_num_stmt> : normal<to_num_stmt> {
+    template <typename Input>
+    static void start(const Input &, engine::engine &e) {
+        e.new_stmt<engine::to_num_stmt>(); //TODO: fix
+    }
+    template <typename Input>
+    static void success(const Input &, engine::engine &e) {
+        e.finish_stmt();
+    }
+};
+
+// to_str
+struct to_str : string<'t', 'o', '_', 's', 't', 'r'> {};
+struct to_str_stmt
+    : seq<opt<bang>, to_str, oparan, list_must<ident, comma, sp>, cparan> {};
+
+template <> struct control<to_str_stmt> : normal<to_str_stmt> {
+    template <typename Input>
+    static void start(const Input &, engine::engine &e) {
+        e.new_stmt<engine::to_str_stmt>(); // TODO: fix
+
+    }
+    template <typename Input>
+    static void success(const Input &, engine::engine &e) {
+        e.finish_stmt();
+    }
+};
+
 // cols
 struct cols : string<'c', 'o', 'l', 's'> {};
 struct colsstmt
@@ -73,7 +111,7 @@ struct colsstmt
 template <> struct control<colsstmt> : normal<colsstmt> {
     template <typename Input>
     static void start(const Input &, engine::engine &e) {
-        e.new_cols_stmt();
+	e.new_stmt<engine::colsstmt>();
     }
     template <typename Input>
     static void success(const Input &, engine::engine &e) {
@@ -92,7 +130,7 @@ struct selectstmt : seq<select, oparan, expr, cparan> {};
 template <> struct control<selectstmt> : normal<selectstmt> {
     template <typename Input>
     static void start(const Input &, engine::engine &e) {
-        e.new_select_stmt();
+	e.new_stmt<engine::selectstmt>();
     }
     template <typename Input>
     static void success(const Input &, engine::engine &e) {
@@ -119,7 +157,7 @@ template <> struct action<op_bool> {
 };
 
 // generic
-struct anystmt : sor<colsstmt, selectstmt> {};
+struct anystmt : sor<colsstmt, selectstmt, to_num_stmt, to_str_stmt> {};
 struct block : seq<opt<sp>, list<anystmt, semi, sp>, opt<semi>> {};
 struct thread_block : seq<obrace, sps, block, sps, cbrace, sps> {};
 struct pgm : must<sor<block, star<thread_block>>, eof> {};
@@ -142,6 +180,13 @@ template <> struct action<str_lit> {
     template <typename Input>
     static void apply(const Input &in, engine::engine &e) {
         e.add_str(in.string());
+    }
+};
+
+template <> struct action<num_lit> {
+    template <typename Input>
+    static void apply(const Input &in, engine::engine &e) {
+        e.add_num(in.string());
     }
 };
 

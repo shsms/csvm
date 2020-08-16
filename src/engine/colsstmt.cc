@@ -26,15 +26,15 @@ std::string colsstmt::string() {
     return ret;
 }
 
-models::row colsstmt::set_header(const models::row &h) {
+models::header_row colsstmt::set_header(const models::header_row &h) {
     if (exclude == true) {
         return set_exclude_header(h);
     }
+    models::header_row out_headers;
     for (auto &col : columns) {
         bool found = false;
         for (auto ii = 0; ii < h.size(); ii++) {
-            if (models::string_equal(col, h[ii])) {
-            // if (col== h[ii]) {
+            if (col == h[ii].name) {
                 col_pos.push_back(ii);
                 out_headers.push_back(h[ii]);
                 found = true;
@@ -48,12 +48,12 @@ models::row colsstmt::set_header(const models::row &h) {
     return out_headers;
 }
 
-models::row colsstmt::set_exclude_header(const models::row &h) {
+models::header_row colsstmt::set_exclude_header(const models::header_row &h) {
+    models::header_row out_headers;
     for (auto ii = 0; ii < h.size(); ii++) {
         bool found = false;
         for (auto &col : columns) {
-            if (models::string_equal(col, h[ii])) {
-            // if (col== h[ii]) {
+            if (col == h[ii].name) {
                 found = true;
                 break;
             }
@@ -68,10 +68,9 @@ models::row colsstmt::set_exclude_header(const models::row &h) {
 
 bool colsstmt::apply(models::row &row) {
     models::row ret;
-    if (!row.empty())
-	for (auto pos : col_pos) {
-	    ret.push_back(row[pos]);
-	}
+    for (auto pos : col_pos) {
+        ret.push_back(row[pos]);
+    }
     row = std::move(ret);
     return true;
 }

@@ -20,8 +20,9 @@ class engine {
     std::string print_buffer;
 
   public:
-    void new_cols_stmt();
-    void new_select_stmt();
+    template <class T> void new_stmt() {
+        curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());
+    }
     void finish_stmt();
 
     void add_ident(const std::string &);
@@ -35,7 +36,7 @@ class engine {
     void apply(models::row &row);
     void cleanup();
     std::string string();
-    void set_header(const models::row &h);
+    void set_header(const models::header_row &h);
 };
 } // namespace engine
 

@@ -5,13 +5,6 @@
 #include <iostream>
 
 namespace engine {
-void engine::new_cols_stmt() {
-    curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<colsstmt>());
-};
-
-void engine::new_select_stmt() {
-    curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<selectstmt>());
-};
 
 void engine::finish_stmt() {
     curr_stmt->finalize();
@@ -63,7 +56,7 @@ std::string engine::string() {
     return ret;
 };
 
-void engine::set_header(const models::row &h) {
+void engine::set_header(const models::header_row &h) {
     auto nextrow = h;
     for (auto &s : curr_block) {
         nextrow = s->set_header(nextrow);
@@ -71,9 +64,9 @@ void engine::set_header(const models::row &h) {
     print_buffer.clear();
     for (auto ii = 0; ii < nextrow.size(); ii++)
         if (ii == 0) // TODO compare with print first col outside loop
-	    print_buffer += nextrow[ii].string_v;
+	    print_buffer += nextrow[ii].name;
         else
-	    print_buffer += "," + nextrow[ii].string_v;
+	    print_buffer += "," + nextrow[ii].name;
     print_buffer += "\n";
 }
 

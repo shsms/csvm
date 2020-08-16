@@ -26,7 +26,7 @@ template <typename Rule> struct action {};
 template <> struct action<header_value> {
     template <typename Input> static void apply(const Input &in, csv &csv) {
         csv.header.emplace_back(
-            models::value{.type = models::string_t, .string_v = in.string()});
+            models::col_header{ .name = in.string(), .type = models::string_t});
     }
 };
 

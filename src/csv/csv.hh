@@ -5,7 +5,7 @@ namespace csv {
 
 struct csv {
     engine::engine &e;
-    models::row header;
+    models::header_row header;
     models::row curr_row;
     void set_header();
     void add_value(std::string&&);

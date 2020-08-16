@@ -9,12 +9,13 @@ void ident::apply(const models::row &row,
     eval_stack.emplace(row[col_pos]);
 }
 
-void ident::set_header(const models::row &h) {
+void ident::set_header(const models::header_row &h) {
     bool found = false;
     for (auto ii = 0; ii < h.size(); ii++) {
-        if (value == h[ii].string_v) {
+        if (value == h[ii].name) {
             col_pos = ii;
             found = true;
+	    return;
         }
     }
     if (found == false) {
@@ -42,7 +43,7 @@ void not_oper::apply(const models::row &row,
                      std::stack<models::value> &eval_stack) {
     auto [op, ok] = models::get_bool_value(eval_stack.top());
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(!op));
+    eval_stack.emplace(models::make_bool_value(!op));
 }
 
 void gte_oper::apply(const models::row &row,
@@ -51,7 +52,7 @@ void gte_oper::apply(const models::row &row,
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(!models::value_lt(op1, op2)));
+    eval_stack.emplace(models::make_bool_value(!models::value_lt(op1, op2)));
 }
 
 void lte_oper::apply(const models::row &row,
@@ -60,7 +61,7 @@ void lte_oper::apply(const models::row &row,
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(!models::value_gt(op1, op2)));
+    eval_stack.emplace(models::make_bool_value(!models::value_gt(op1, op2)));
 }
 
 void gt_oper::apply(const models::row &row,
@@ -69,7 +70,7 @@ void gt_oper::apply(const models::row &row,
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(models::value_gt(op1, op2)));
+    eval_stack.emplace(models::make_bool_value(models::value_gt(op1, op2)));
 }
 
 void lt_oper::apply(const models::row &row,
@@ -78,7 +79,7 @@ void lt_oper::apply(const models::row &row,
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(models::value_lt(op1, op2)));
+    eval_stack.emplace(models::make_bool_value(models::value_lt(op1, op2)));
 }
 
 void eq_oper::apply(const models::row &row,
@@ -88,7 +89,7 @@ void eq_oper::apply(const models::row &row,
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(models::value_equal(op1, op2)));
+    eval_stack.emplace(models::make_bool_value(models::value_equal(op1, op2)));
 }
 
 void regex_oper::apply(const models::row &row,
@@ -102,7 +103,7 @@ void neq_oper::apply(const models::row &row,
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(!models::value_equal(op1, op2)));
+    eval_stack.emplace(models::make_bool_value(!models::value_equal(op1, op2)));
 }
 
 void and_oper::apply(const models::row &row,
@@ -114,7 +115,7 @@ void and_oper::apply(const models::row &row,
     // if (!ok1 || !ok2) { // TODO: replace with engine analyser
     //     throw std::runtime_error("&& not ok");
     // }
-    eval_stack.emplace(models::bool_value(op1 && op2));
+    eval_stack.emplace(models::make_bool_value(op1 && op2));
 }
 
 void or_oper::apply(const models::row &row,
@@ -123,6 +124,6 @@ void or_oper::apply(const models::row &row,
     eval_stack.pop();
     auto [op1, ok1] = models::get_bool_value(eval_stack.top());
     eval_stack.pop();
-    eval_stack.emplace(models::bool_value(op1 || op2));
+    eval_stack.emplace(models::make_bool_value(op1 || op2));
 }
 } // namespace engine::expr
