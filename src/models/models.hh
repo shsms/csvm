@@ -6,17 +6,19 @@
 #include <functional>
 #include <string>
 #include <typeindex>
+#include <variant>
 #include <vector>
 
 namespace models {
 enum value_t { double_t, string_t, bool_t };
 
-struct value {
-    value_t type;
-    std::string string_v;
-    double double_v;
-    bool bool_v;
-};
+using value = std::variant<std::string, double, bool>;
+// struct value {
+//     value_t type;
+//     std::string string_v;
+//     double double_v;
+//     bool bool_v;
+// };
 
 using row = std::vector<value>;
 
@@ -34,60 +36,50 @@ struct bool_resp {
 };
 
 inline bool_resp get_bool_value(const value &v) {
-    return bool_resp{.bool_v = v.bool_v, .is_bool = v.type == bool_t};
+    if (std::holds_alternative<bool>(v)) {
+        return bool_resp{std::get<bool>(v), true};
+    }
+    return bool_resp{false, false};
 }
 
-inline value make_bool_value(bool v) { return value{.type = bool_t, .bool_v = v}; }
+inline value make_bool_value(bool v) {
+    return v;
+}
 
 inline bool string_equal(const std::string &a, const value &b) {
-    return a == b.string_v;
+    if (std::holds_alternative<std::string>(b))
+	return a == std::get<std::string>(b);
+    return false;
 }
 
 inline bool value_equal(const value &a, const value &b) {
-    switch (a.type) {
-    case double_t:
-        return a.double_v == b.double_v;
-    case bool_t:
-        return a.bool_v == b.bool_v;
-    default:
-        return a.string_v == b.string_v;
-    }
+    return a == b;
 }
 
 inline bool value_lt(const value &a, const value &b) {
-    switch (a.type) {
-    case double_t:
-        return a.double_v < b.double_v;
-    default:
-        return a.string_v < b.string_v;
-    }
+    return a < b;
 }
 
 inline bool value_gt(const value &a, const value &b) {
-    switch (a.type) {
-    case double_t:
-        return a.double_v > b.double_v;
-    default:
-        return a.string_v > b.string_v;
-    }
+        return a > b;
 }
 
 inline void to_num(value &a) {
     double vv = 0.0;
-    if (a.string_v.size() > 0) {
-	try {
-	    vv = std::stod(a.string_v);
-	} catch (std::invalid_argument) {
-	    throw std::invalid_argument(std::string("non-numeric value '")+a.string_v + "'");
-	}
+    auto str = std::get<std::string>(a);
+    if (str.size() > 0) {
+        try {
+            vv = std::stod(str);
+        } catch (std::invalid_argument) {
+            throw std::invalid_argument(std::string("non-numeric value '") +
+                                        str + "'");
+        }
     }
-    a.type = double_t;
-    a.double_v = vv;
+    a = vv;
 }
 
 inline void to_str(value &a) {
-    a.type = string_t;
-    a.string_v = std::to_string(a.double_v);
+    a = std::to_string(std::get<double>(a));
 }
 
 } // namespace models

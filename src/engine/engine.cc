@@ -41,9 +41,9 @@ void engine::apply(models::row &row) {
     }
     for (auto ii = 0; ii < row.size(); ii++)
         if (ii == 0)
-            print_buffer += row[ii].string_v;
+            print_buffer += std::get<std::string>(row[ii]);
         else
-            print_buffer += comma_str + row[ii].string_v;
+            print_buffer += comma_str + std::get<std::string>(row[ii]);
     print_buffer += newline;
 }
 

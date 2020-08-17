@@ -61,8 +61,7 @@ void run(const std::string &csvfile, engine::engine &e) {
 }
 
 inline void csv::add_value(std::string &&v) {
-    curr_row.emplace_back(
-        models::value{.type = models::string_t, .string_v = std::move(v)});
+    curr_row.emplace_back(v);
 }
 
 inline void csv::set_header() { e.set_header(header); }
