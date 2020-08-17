@@ -110,10 +110,7 @@ bool expr::apply(models::row &row) {
     for (auto step : steps) {
         step->apply(row, eval_stack);
     }
-    if (auto [sel, ok] = models::get_bool_value(eval_stack.top()); sel && ok) {
-        return true;
-    }
-    return false;
+    return std::get<bool>(eval_stack.top());
 }
 
 } // namespace engine::expr

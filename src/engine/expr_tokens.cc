@@ -40,7 +40,7 @@ void num::apply(const models::row &row, std::stack<models::value> &eval_stack) {
 
 void not_oper::apply(const models::row &row,
                      std::stack<models::value> &eval_stack) {
-    auto [op, ok] = models::get_bool_value(eval_stack.top());
+    auto op = std::get<bool>(eval_stack.top());
     eval_stack.pop();
     eval_stack.emplace(!op);
 }
@@ -107,9 +107,9 @@ void neq_oper::apply(const models::row &row,
 
 void and_oper::apply(const models::row &row,
                      std::stack<models::value> &eval_stack) {
-    auto [op2, ok2] = models::get_bool_value(eval_stack.top());
+    auto op2 = std::get<bool>(eval_stack.top());
     eval_stack.pop();
-    auto [op1, ok1] = models::get_bool_value(eval_stack.top());
+    auto op1 = std::get<bool>(eval_stack.top());
     eval_stack.pop();
     // if (!ok1 || !ok2) { // TODO: replace with engine analyser
     //     throw std::runtime_error("&& not ok");
@@ -119,9 +119,9 @@ void and_oper::apply(const models::row &row,
 
 void or_oper::apply(const models::row &row,
                     std::stack<models::value> &eval_stack) {
-    auto [op2, ok2] = models::get_bool_value(eval_stack.top());
+    auto op2 = std::get<bool>(eval_stack.top());
     eval_stack.pop();
-    auto [op1, ok1] = models::get_bool_value(eval_stack.top());
+    auto op1 = std::get<bool>(eval_stack.top());
     eval_stack.pop();
     eval_stack.emplace(op1 || op2);
 }

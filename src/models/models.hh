@@ -35,21 +35,8 @@ struct bool_resp {
     bool is_bool;
 };
 
-inline bool_resp get_bool_value(const value &v) {
-    if (std::holds_alternative<bool>(v)) {
-        return bool_resp{std::get<bool>(v), true};
-    }
-    return bool_resp{false, false};
-}
-
-inline value make_bool_value(bool v) {
-    return v;
-}
-
 inline bool string_equal(const std::string &a, const value &b) {
-    if (std::holds_alternative<std::string>(b))
-	return a == std::get<std::string>(b);
-    return false;
+    return a == std::get<std::string>(b);
 }
 
 inline bool value_equal(const value &a, const value &b) {

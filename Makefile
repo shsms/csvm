@@ -5,7 +5,7 @@ LDFLAGS =
 
 #RUN_ARGS = "select(E >= '303' || B == D); !cols(D)"
 #RUN_ARGS="select(a == z || (b == c && d==w))"
-#RUN_ARGS = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm); to_str(trdSz);"
+#RUN_ARGS = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
 RUN_ARGS = "select(type=='q');"
 #RUN_ARGS = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
 
