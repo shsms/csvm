@@ -2,12 +2,12 @@
 #define CSVQ_MODELS_H
 
 #include <any>
-#include <fmt/format.h>
 #include <functional>
 #include <string>
 #include <typeindex>
 #include <variant>
 #include <vector>
+#include <stdexcept>
 
 namespace models {
 enum value_t { double_t, string_t, bool_t };

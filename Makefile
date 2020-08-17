@@ -1,6 +1,6 @@
 CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
+CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include
 LDFLAGS =
 
 #RUN_ARGS = "select(E >= '303' || B == D); !cols(D)"
@@ -15,8 +15,7 @@ OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
 PROJECT_ROOT = $(shell pwd)
 TARGET_BIN = bin/csvq
-LIBFMT_TGT = build/.libs/fmt/libfmt.a
-LIBS = $(LIBFMT_TGT)
+LIBS =
 
 .PHONY: run clean cleanAll
 
@@ -40,14 +39,9 @@ bin:
 build/.objs/%.mkdir: src/%.cc
 	@mkdir -p $(shell dirname $@)
 
-build/.objs/%.o: src/%.cc src/%.hh build/.objs/%.mkdir vendor/PEGTL/include vendor/fmt/include
+build/.objs/%.o: src/%.cc src/%.hh build/.objs/%.mkdir vendor/PEGTL/include
 	$(CXX) $(CPPFLAGS) -c -o $@ $<
 
 .PRECIOUS: vendor/%/include
 vendor/%/include:
 	git submodule update --init --recursive $(dir $@)
-
-$(LIBFMT_TGT): vendor/fmt/include
-	mkdir -p $(dir $@)
-	cd $(dir $@) && cmake $(PROJECT_ROOT)/$(dir $<)
-	make -C $(dir $@) fmt

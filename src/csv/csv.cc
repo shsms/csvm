@@ -1,5 +1,4 @@
 #include "csv.hh"
-#include <fmt/format.h>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
 

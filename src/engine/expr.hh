@@ -5,7 +5,7 @@
 #include "stmt.hh"
 #include <stack>
 #include <string>
-
+#include <memory>
 namespace engine::expr {
 
 class expr : public stmt {
