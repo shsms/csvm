@@ -66,7 +66,10 @@ inline void to_num(value &a) {
 }
 
 inline void to_str(value &a) {
-    a = std::to_string(std::get<double>(a));
+    auto str = std::to_string(std::get<double>(a));
+    str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
+    str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
+    a = std::move(str);
 }
 
 } // namespace models
