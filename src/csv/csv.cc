@@ -2,6 +2,7 @@
 #include <fmt/format.h>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
+#include <stack>
 
 namespace csv {
 using namespace tao::pegtl;
@@ -53,7 +54,7 @@ inline void csv::add_value(std::string &&v) { curr_row.emplace_back(v); }
 inline void csv::set_header() { e.set_header(header); }
 
 void csv::new_row() {
-    if (e.apply(curr_row) == false) {
+    if (e.apply(curr_row, eval_stack) == false) {
         curr_row.clear();
         return;
     }

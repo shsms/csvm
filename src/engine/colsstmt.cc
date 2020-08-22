@@ -67,7 +67,7 @@ void colsstmt::set_exclude_header(models::header_row &h) {
     h = std::move(out_headers);
 }
 
-bool colsstmt::apply(models::row &row) {
+bool colsstmt::apply(models::row &row, std::stack<models::value>& eval_stack) const {
     models::row ret;
     for (auto pos : col_pos) {
         ret.push_back(row[pos]);

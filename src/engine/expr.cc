@@ -105,7 +105,7 @@ void expr::set_header(models::header_row &h) {
     }
 }
 
-bool expr::apply(models::row &row) {
+bool expr::apply(models::row &row, std::stack<models::value>& eval_stack) const {
     for (auto step : steps) {
         step->apply(row, eval_stack);
     }

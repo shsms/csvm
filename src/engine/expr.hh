@@ -11,7 +11,6 @@ namespace engine::expr {
 class expr : public stmt {
     std::vector<std::shared_ptr<token>> steps;
     std::deque<std::shared_ptr<token>> stack;
-    std::stack<models::value> eval_stack;
 
     static const std::unordered_map<std::string, int> precedence;
 
@@ -24,7 +23,7 @@ class expr : public stmt {
     void finalize() override;
     std::string string() override;
     void set_header(models::header_row &h) override;
-    bool apply(models::row &) override;
+    bool apply(models::row &, std::stack<models::value>& eval_stack) const override;
 };
 
 } // namespace engine::expr

@@ -35,7 +35,7 @@ void to_str_stmt::set_header(models::header_row &h) {
     }
 }
 
-bool to_str_stmt::apply(models::row &row) {
+bool to_str_stmt::apply(models::row &row, std::stack<models::value>& eval_stack) const {
     for (auto pos : col_pos) {
 	models::to_str(row[pos]);
     }

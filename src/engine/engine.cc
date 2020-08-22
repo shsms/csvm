@@ -25,10 +25,10 @@ void engine::add_oper(const std::string &oper) {
     curr_stmt->add_oper(oper);
 }
 
-bool engine::apply(models::row &row) {
+bool engine::apply(models::row &row, std::stack<models::value>& eval_stack) const {
     bool keep = true;
     for (auto &s : curr_block) {
-        keep = s->apply(row);
+        keep = s->apply(row, eval_stack);
         if (keep == false) {
             return false;
         }
@@ -46,6 +46,7 @@ std::string engine::string() {
 };
 
 void engine::set_header(models::header_row &h) {
+    header_set = true;
     for (auto &s : curr_block) {
         s->set_header(h);
     }

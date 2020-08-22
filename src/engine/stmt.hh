@@ -3,7 +3,7 @@
 
 #include "../models/models.hh"
 #include <string>
-
+#include <stack>
 namespace engine {
 
 class stmt {
@@ -31,7 +31,7 @@ class stmt {
 
     virtual std::string string() = 0;
 
-    virtual bool apply(models::row &) = 0;
+    virtual bool apply(models::row &, std::stack<models::value>& eval_stack) const = 0;
 };
 
 } // namespace engine

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fmt/format.h>
 #include <stdexcept>
+#include <stack>
 
 namespace engine {
 
@@ -23,7 +24,7 @@ class colsstmt : public stmt {
     std::string string() override;
 
     void set_header(models::header_row &h) override;
-    bool apply(models::row &row) override;
+    bool apply(models::row &row, std::stack<models::value>& eval_stack) const override;
 };
 
 } // namespace engine

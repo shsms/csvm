@@ -1,11 +1,15 @@
 #include "../engine/engine.hh"
 #include "../models/models.hh"
 #include <string>
+#include <stack>
+
 namespace csv {
 
 class csv {
     engine::engine &e;
     std::string print_buffer;
+    std::stack<models::value> eval_stack;
+
 public:
     models::header_row header;
     models::row curr_row;
