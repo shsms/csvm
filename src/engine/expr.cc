@@ -99,11 +99,10 @@ std::string expr::string() {
     return ret;
 }
 
-models::header_row expr::set_header(const models::header_row &h) {
+void expr::set_header(models::header_row &h) {
     for (auto &step : steps) {
         step->set_header(h);
     }
-    return h;
 }
 
 bool expr::apply(models::row &row) {

@@ -12,7 +12,7 @@ class colsstmt : public stmt {
 
     bool exclude;
 
-    models::header_row set_exclude_header(const models::header_row &h);
+    void set_exclude_header(models::header_row &h);
 
   public:
     colsstmt();
@@ -22,7 +22,7 @@ class colsstmt : public stmt {
     void add_bang() override;
     std::string string() override;
 
-    models::header_row set_header(const models::header_row &h) override;
+    void set_header(models::header_row &h) override;
     bool apply(models::row &row) override;
 };
 

@@ -9,7 +9,7 @@ namespace engine {
 class stmt {
   public:
     virtual void add_ident(const std::string &) = 0;
-    virtual models::header_row set_header(const models::header_row &) = 0;
+    virtual void set_header(models::header_row &) = 0;
 
     virtual void add_str(const std::string &) {
         throw std::runtime_error("stmt::add_str not implemented");

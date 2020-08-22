@@ -26,9 +26,10 @@ std::string colsstmt::string() {
     return ret;
 }
 
-models::header_row colsstmt::set_header(const models::header_row &h) {
+void colsstmt::set_header(models::header_row &h) {
     if (exclude == true) {
-        return set_exclude_header(h);
+        set_exclude_header(h);
+	return;
     }
     models::header_row out_headers;
     for (auto &col : columns) {
@@ -45,10 +46,10 @@ models::header_row colsstmt::set_header(const models::header_row &h) {
             throw std::runtime_error("column not found in header:" + col);
         }
     }
-    return out_headers;
+    h = std::move(out_headers);
 }
 
-models::header_row colsstmt::set_exclude_header(const models::header_row &h) {
+void colsstmt::set_exclude_header(models::header_row &h) {
     models::header_row out_headers;
     for (auto ii = 0; ii < h.size(); ii++) {
         bool found = false;
@@ -63,7 +64,7 @@ models::header_row colsstmt::set_exclude_header(const models::header_row &h) {
             out_headers.push_back(h[ii]);
         }
     }
-    return out_headers;
+    h = std::move(out_headers);
 }
 
 bool colsstmt::apply(models::row &row) {

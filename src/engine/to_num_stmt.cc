@@ -19,7 +19,7 @@ std::string to_num_stmt::string() {
     return ret;
 }
 
-models::header_row to_num_stmt::set_header(const models::header_row &h) {
+void to_num_stmt::set_header(models::header_row &h) {
     for (auto &col : columns) {
         bool found = false;
         for (auto ii = 0; ii < h.size(); ii++) {
@@ -33,7 +33,6 @@ models::header_row to_num_stmt::set_header(const models::header_row &h) {
             throw std::runtime_error("column not found in header:" + col);
         }
     }
-    return h;
 }
 
 bool to_num_stmt::apply(models::row &row) {

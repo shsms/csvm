@@ -17,8 +17,7 @@ class engine {
     std::shared_ptr<stmt> curr_stmt;
     tblock curr_block;
     std::vector<tblock> tblocks;
-    std::string print_buffer;
-
+    bool header_set = false;
   public:
     template <class T> void new_stmt() {
         curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());
@@ -33,10 +32,10 @@ class engine {
     void begin_method(const std::string &);
     void end_method();
 
-    void apply(models::row &row);
-    void cleanup();
+    bool apply(models::row &row);
     std::string string();
-    void set_header(const models::header_row &h);
+    bool has_header();
+    void set_header(models::header_row &h);
 };
 } // namespace engine
 

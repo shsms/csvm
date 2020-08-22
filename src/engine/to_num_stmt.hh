@@ -14,7 +14,7 @@ class to_num_stmt : public stmt {
     void add_ident(const std::string &col) override;
     std::string string() override;
 
-    models::header_row set_header(const models::header_row &h) override;
+    void set_header(models::header_row &h) override;
     bool apply(models::row &row) override;
 };
 

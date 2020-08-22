@@ -23,7 +23,7 @@ class expr : public stmt {
     void add_oper(const std::string &) override;
     void finalize() override;
     std::string string() override;
-    models::header_row set_header(const models::header_row &h) override;
+    void set_header(models::header_row &h) override;
     bool apply(models::row &) override;
 };
 
