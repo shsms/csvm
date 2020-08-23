@@ -13,14 +13,15 @@ class csv {
 public:
     models::header_row header;
     models::row curr_row;
-    uint64_t in_rows;
 
-    csv(engine::engine &e):e{e}, in_rows{0} {}
+    csv(engine::engine &e):e{e} {}
     void set_header();
     void add_value(std::string&&);
     void new_row();
     void cleanup();
 };
 
-void run(const std::string &, engine::engine &e);
+// TODO: make engine& a const ref after migrating parse_body
+void parse_body(engine::engine &, std::string &&, int );
+void parse_header(engine::engine &, std::string &&);
 } // namespace csv

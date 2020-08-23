@@ -36,13 +36,11 @@ $(TARGET_BIN): $(OBJS) $(LIBS)
 bin:
 	mkdir bin
 
-build/.objs/%.mkdir: src/%.cc
-	@mkdir -p $(shell dirname $@)
-
 DEP = $(OBJS:%.o=%.d)
 -include $(DEP)
 
-build/.objs/%.o: src/%.cc src/%.hh build/.objs/%.mkdir vendor/PEGTL/include vendor/fmt/include
+build/.objs/%.o: src/%.cc
+	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CPPFLAGS) -MMD -c -o $@ $<
 
 .PRECIOUS: vendor/%/include

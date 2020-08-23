@@ -80,16 +80,21 @@ void csv::cleanup() {
         std::cout << print_buffer;
 }
 
-void run(const std::string &csvfile, engine::engine &e) {
+void parse_body(engine::engine &e, std::string &&data, int token) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
     //     fmt::print("analyze success\n");
     // }
     csv csv(e);
-    file_input in(csvfile);
-    parse<hfile, action>(in, csv);
+    string_input in(std::move(data), "csv");
+    parse<file, action>(in, csv);
     csv.cleanup();
 }
 
+void parse_header(engine::engine &e, std::string &&h) {
+    csv csv(e);
+    string_input in(std::move(h), "header");
+    parse<header_line, action>(in, csv);
+}
 } // namespace csv
