@@ -1,8 +1,10 @@
 #include "csv/csv.hh"
 #include "engine/engine.hh"
 #include "parser/parser.hh"
+#include "order.hh"
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 std::string next_chunk(std::ifstream &file) {
     std::string chunk;
@@ -12,7 +14,7 @@ std::string next_chunk(std::ifstream &file) {
     auto end = file.tellg();
     auto chunksize = end - beginning;
 
-    if (chunksize > 1.5e6)
+    if (chunksize > 1e6)
         chunksize = 1e6;
     chunk.resize(chunksize);
     file.seekg(beginning);
@@ -41,7 +43,21 @@ int main(int argc, char *argv[]) {
             csv::parse_header(e, std::move(header));
         }
 
-        while (!file.eof())
-            csv::parse_body(e, next_chunk(file), -1);
+	ordering_lock lock;
+
+	std::vector<std::thread> threads;
+        for (int chunk_id = 0; !file.eof(); chunk_id++) {
+	    auto chunk = next_chunk(file);
+	    lock.t_start();
+	    auto th = std::thread([&](std::string&& data, int id){
+		csv::parse_body(e, std::move(data), id, lock);
+	    }, std::move(chunk), chunk_id);
+	    threads.push_back(std::move(th));
+	    // csv::parse_body(e, next_chunk(file), chunk_id, lock);
+	}
+	for (auto &t : threads) {
+	    if (t.joinable())
+		t.join();
+	}
     }
 }

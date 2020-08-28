@@ -1,4 +1,5 @@
 #include "csv.hh"
+#include "../order.hh"
 #include <fmt/format.h>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
@@ -61,10 +62,6 @@ void csv::new_row() {
 
     static const std::string comma_str = ",";
     static const std::string newline = "\n";
-    if (print_buffer.length() >= 1e4) {
-        std::cout << print_buffer;
-        print_buffer.clear();
-    }
     for (auto ii = 0; ii < curr_row.size(); ii++)
         if (ii == 0)
             print_buffer += std::get<std::string>(curr_row[ii]);
@@ -75,12 +72,12 @@ void csv::new_row() {
     curr_row.clear();
 }
 
-void csv::cleanup() {
+void csv::print() noexcept {
     if (print_buffer.length() > 0)
         std::cout << print_buffer;
 }
 
-void parse_body(engine::engine &e, std::string &&data, int token) {
+void parse_body(engine::engine &e, std::string &&data, int token, ordering_lock &lock) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
@@ -89,7 +86,16 @@ void parse_body(engine::engine &e, std::string &&data, int token) {
     csv csv(e);
     string_input in(std::move(data), "csv");
     parse<file, action>(in, csv);
-    csv.cleanup();
+    if (token >= 0) {
+	lock.t_end();
+	//std::cerr << "locking token: " << token << "\n";
+	lock.lock(token);
+	//std::cerr << "printing token: " << token << "\n";
+	csv.print();
+	lock.unlock();
+    } else {
+	csv.print();
+    }
 }
 
 void parse_header(engine::engine &e, std::string &&h) {
