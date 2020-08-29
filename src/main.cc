@@ -56,11 +56,11 @@ int main(int argc, char *argv[]) {
             csv::parse_header(e, std::move(header));
         }
 
-        auto thread_count = 9;
+        auto thread_count = 30;
         threading::ordering_lock lock;
 
         if (thread_count > 1) {
-            threading::queue queue(1000);
+            threading::queue queue(10);
 
             std::vector<std::thread> threads;
             threads.reserve(thread_count);
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
             }
 
             for (int chunk_id = 0; !file.eof(); chunk_id++) {
-                queue.enqueue({chunk_id, next_chunk(file, 5e6)});
+                queue.enqueue({chunk_id, next_chunk(file, 3e6)});
             }
             queue.set_eof();
 
