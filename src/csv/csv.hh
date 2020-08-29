@@ -15,7 +15,7 @@ public:
     models::header_row header;
     models::row curr_row;
 
-    csv(engine::engine &e):e{e} {}
+    csv(engine::engine &e, size_t inp_size):e{e} { print_buffer.reserve(inp_size); }
     void set_header();
     void add_value(std::string&&);
     void new_row();
@@ -23,6 +23,6 @@ public:
 };
 
 // TODO: make engine& a const ref after migrating parse_body
-void parse_body(engine::engine &, std::string &&, int, ordering_lock &);
+void parse_body(engine::engine &, std::string &&, int, threading::ordering_lock &);
 void parse_header(engine::engine &, std::string &&);
 } // namespace csv

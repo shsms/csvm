@@ -77,17 +77,16 @@ void csv::print() noexcept {
         std::cout << print_buffer;
 }
 
-void parse_body(engine::engine &e, std::string &&data, int token, ordering_lock &lock) {
+void parse_body(engine::engine &e, std::string &&data, int token, threading::ordering_lock &lock) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
     //     fmt::print("analyze success\n");
     // }
-    csv csv(e);
+    csv csv(e, data.size());
     string_input in(std::move(data), "csv");
     parse<file, action>(in, csv);
     if (token >= 0) {
-	lock.t_end();
 	//std::cerr << "locking token: " << token << "\n";
 	lock.lock(token);
 	//std::cerr << "printing token: " << token << "\n";
@@ -99,7 +98,7 @@ void parse_body(engine::engine &e, std::string &&data, int token, ordering_lock 
 }
 
 void parse_header(engine::engine &e, std::string &&h) {
-    csv csv(e);
+    csv csv(e, h.size());
     string_input in(std::move(h), "header");
     parse<header_line, action>(in, csv);
 }
