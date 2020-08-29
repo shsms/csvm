@@ -39,17 +39,11 @@ inline bool string_equal(const std::string &a, const value &b) {
     return a == std::get<std::string>(b);
 }
 
-inline bool value_equal(const value &a, const value &b) {
-    return a == b;
-}
+inline bool value_equal(const value &a, const value &b) { return a == b; }
 
-inline bool value_lt(const value &a, const value &b) {
-    return a < b;
-}
+inline bool value_lt(const value &a, const value &b) { return a < b; }
 
-inline bool value_gt(const value &a, const value &b) {
-        return a > b;
-}
+inline bool value_gt(const value &a, const value &b) { return a > b; }
 
 inline void to_num(value &a) {
     double vv = 0.0;
@@ -67,8 +61,8 @@ inline void to_num(value &a) {
 
 inline void to_str(value &a) {
     auto str = std::to_string(std::get<double>(a));
-    str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-    str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
+    str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+    str.erase(str.find_last_not_of('.') + 1, std::string::npos);
     a = std::move(str);
 }
 

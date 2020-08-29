@@ -29,7 +29,7 @@ std::string colsstmt::string() {
 void colsstmt::set_header(models::header_row &h) {
     if (exclude == true) {
         set_exclude_header(h);
-	return;
+        return;
     }
     models::header_row out_headers;
     for (auto &col : columns) {
@@ -67,7 +67,8 @@ void colsstmt::set_exclude_header(models::header_row &h) {
     h = std::move(out_headers);
 }
 
-bool colsstmt::apply(models::row &row, std::stack<models::value>& eval_stack) const {
+bool colsstmt::apply(models::row &row,
+                     std::stack<models::value> &eval_stack) const {
     models::row ret;
     for (auto pos : col_pos) {
         ret.push_back(row[pos]);

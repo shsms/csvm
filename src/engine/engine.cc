@@ -21,11 +21,10 @@ void engine::add_num(const std::string &str) { curr_stmt->add_num(str); };
 
 void engine::add_bang() { curr_stmt->add_bang(); };
 
-void engine::add_oper(const std::string &oper) {
-    curr_stmt->add_oper(oper);
-}
+void engine::add_oper(const std::string &oper) { curr_stmt->add_oper(oper); }
 
-bool engine::apply(models::row &row, std::stack<models::value>& eval_stack) const {
+bool engine::apply(models::row &row,
+                   std::stack<models::value> &eval_stack) const {
     bool keep = true;
     for (auto &s : curr_block) {
         keep = s->apply(row, eval_stack);
@@ -53,14 +52,12 @@ void engine::set_header(models::header_row &h) {
     std::string buffer{};
     for (auto ii = 0; ii < h.size(); ii++)
         if (ii == 0) // TODO compare with print first col outside loop
-	    buffer += h[ii].name;
+            buffer += h[ii].name;
         else
-	    buffer += "," + h[ii].name;
+            buffer += "," + h[ii].name;
     buffer += "\n";
     std::cout << buffer;
 }
 
-bool engine::has_header() {
-    return header_set;
-}
+bool engine::has_header() { return header_set; }
 } // namespace engine

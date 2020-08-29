@@ -3,8 +3,8 @@
 
 #include "locks.hh"
 #include <atomic>
-#include <condition_variable>
 #include <chrono>
+#include <condition_variable>
 
 namespace threading {
 
@@ -21,10 +21,11 @@ class ordering_lock {
         auto vv = order.load(std::memory_order_relaxed);
         if (pos == vv)
             return;
-        while(!order_cond.wait_for(flock, 5ms, [&]() {
+        while (!order_cond.wait_for(flock, 5ms, [&]() {
             vv = order.load(std::memory_order_relaxed);
             return pos == vv;
-        }));
+        }))
+            ;
     }
 
     void unlock() {

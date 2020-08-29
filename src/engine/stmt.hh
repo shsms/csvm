@@ -2,8 +2,8 @@
 #define CSVQ_STMT_H
 
 #include "../models/models.hh"
-#include <string>
 #include <stack>
+#include <string>
 namespace engine {
 
 class stmt {
@@ -31,7 +31,8 @@ class stmt {
 
     virtual std::string string() = 0;
 
-    virtual bool apply(models::row &, std::stack<models::value>& eval_stack) const = 0;
+    virtual bool apply(models::row &,
+                       std::stack<models::value> &eval_stack) const = 0;
 };
 
 } // namespace engine

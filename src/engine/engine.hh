@@ -4,9 +4,9 @@
 #include "stmt.hh"
 #include <algorithm>
 #include <memory>
+#include <stack>
 #include <string>
 #include <vector>
-#include <stack>
 namespace engine {
 
 // TODO: tblock should eventually be a class that has queues to
@@ -19,6 +19,7 @@ class engine {
     tblock curr_block;
     std::vector<tblock> tblocks;
     bool header_set = false;
+
   public:
     template <class T> void new_stmt() {
         curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());
@@ -33,7 +34,7 @@ class engine {
     void begin_method(const std::string &);
     void end_method();
 
-    bool apply(models::row &row, std::stack<models::value>& eval_stack) const;
+    bool apply(models::row &row, std::stack<models::value> &eval_stack) const;
     std::string string();
     bool has_header();
     void set_header(models::header_row &h);

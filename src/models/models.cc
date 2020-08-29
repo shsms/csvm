@@ -1,5 +1,3 @@
 #include "models.hh"
 
-namespace models {
-    
-}
+namespace models {}

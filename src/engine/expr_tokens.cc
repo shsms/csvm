@@ -10,22 +10,19 @@ void ident::apply(const models::row &row,
 }
 
 void ident::set_header(const models::header_row &h) {
-    bool found = false;
     for (auto ii = 0; ii < h.size(); ii++) {
         if (value == h[ii].name) {
             col_pos = ii;
-            found = true;
-	    return;
+            return;
         }
     }
-    if (found == false) {
-        throw std::runtime_error("field not found:" + value);
-    }
+    throw std::runtime_error("field not found:" + value);
 }
 
 str::str(const std::string &s) : token(s) { value = s; }
 
-void str::apply(const models::row &row, std::stack<models::value> &eval_stack) const {
+void str::apply(const models::row &row,
+                std::stack<models::value> &eval_stack) const {
     eval_stack.emplace(value);
 }
 
@@ -33,9 +30,9 @@ num::num(const std::string &s) : token(s) { value = std::stod(s); }
 
 num::num(const double &d) : token(std::to_string(d)) { value = d; }
 
-void num::apply(const models::row &row, std::stack<models::value> &eval_stack) const {
+void num::apply(const models::row &row,
+                std::stack<models::value> &eval_stack) const {
     eval_stack.emplace(value);
-
 }
 
 void not_oper::apply(const models::row &row,

@@ -15,7 +15,7 @@ class expr : public stmt {
     static const std::unordered_map<std::string, int> precedence;
 
   public:
-    void add_ident(const std::string &ident) override;
+    void add_ident(const std::string &) override;
     void add_str(const std::string &) override;
     void add_num(const std::string &) override;
     void add_bang() override;
@@ -23,7 +23,8 @@ class expr : public stmt {
     void finalize() override;
     std::string string() override;
     void set_header(models::header_row &h) override;
-    bool apply(models::row &, std::stack<models::value>& eval_stack) const override;
+    bool apply(models::row &,
+               std::stack<models::value> &eval_stack) const override;
 };
 
 } // namespace engine::expr

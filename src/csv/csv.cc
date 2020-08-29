@@ -1,14 +1,16 @@
 #include "csv.hh"
 #include "../order.hh"
 #include <fmt/format.h>
+#include <stack>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
-#include <stack>
 
 namespace csv {
 using namespace tao::pegtl;
 
-template <char C> struct string_without : star<not_one<C, 10, 13>> {};
+const int TABCHAR = 10, RETCHAR = 13;
+
+template <char C> struct string_without : star<not_one<C, TABCHAR, RETCHAR>> {};
 struct plain_value : string_without<','> {};
 struct quoted_value : if_must<one<'"'>, string_without<'"'>, one<'"'>> {};
 struct value : sor<quoted_value, plain_value> {};
@@ -77,7 +79,8 @@ void csv::print() noexcept {
         std::cout << print_buffer;
 }
 
-void parse_body(engine::engine &e, std::string &&data, int token, threading::ordering_lock &lock) {
+void parse_body(engine::engine &e, std::string &&data, int token,
+                threading::ordering_lock &lock) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
@@ -87,13 +90,11 @@ void parse_body(engine::engine &e, std::string &&data, int token, threading::ord
     string_input in(std::move(data), "csv");
     parse<file, action>(in, csv);
     if (token >= 0) {
-	//std::cerr << "locking token: " << token << "\n";
-	lock.lock(token);
-	//std::cerr << "printing token: " << token << "\n";
-	csv.print();
-	lock.unlock();
+        lock.lock(token);
+        csv.print();
+        lock.unlock();
     } else {
-	csv.print();
+        csv.print();
     }
 }
 

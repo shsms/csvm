@@ -1,7 +1,7 @@
 #include "csv/csv.hh"
 #include "engine/engine.hh"
-#include "parser/parser.hh"
 #include "order.hh"
+#include "parser/parser.hh"
 #include "queue.hh"
 #include <fstream>
 #include <iostream>
@@ -29,11 +29,12 @@ std::string next_chunk(std::ifstream &file, uint64_t max_chunk_size) {
     return chunk;
 }
 
-void worker(threading::queue& queue, engine::engine& e, threading::ordering_lock& lock) {
+void worker(threading::queue &queue, engine::engine &e,
+            threading::ordering_lock &lock) {
     auto chunk = queue.dequeue();
-    while(chunk.has_value()) {
-	csv::parse_body(e, std::move(chunk->data), chunk->id, lock);
-	chunk = queue.dequeue();
+    while (chunk.has_value()) {
+        csv::parse_body(e, std::move(chunk->data), chunk->id, lock);
+        chunk = queue.dequeue();
     }
 }
 
@@ -52,30 +53,31 @@ int main(int argc, char *argv[]) {
             csv::parse_header(e, std::move(header));
         }
 
-	auto thread_count = 9;
-	threading::ordering_lock lock;
+        auto thread_count = 9;
+        threading::ordering_lock lock;
 
-	if (thread_count > 1) {
-	threading::queue queue(1000);
+        if (thread_count > 1) {
+            threading::queue queue(1000);
 
-	std::vector<std::thread> threads;
-        for (int ii = 0; ii < thread_count - 1; ii++) {
-	    threads.push_back(std::thread([&](){worker(queue, e, lock);}));
-	}
-	
-        for (int chunk_id = 0; !file.eof(); chunk_id++) {
-	    queue.enqueue({chunk_id, next_chunk(file, 5e6)});
-	}
-	queue.set_eof();
-	
-	for (auto &t : threads) {
-	    if (t.joinable())
-		t.join();
-	}
-	} else {
-	    for (int chunk_id = 0; !file.eof(); chunk_id++) {
-		csv::parse_body(e, next_chunk(file, 1e6), -1, lock);
-	    }
-	}
+            std::vector<std::thread> threads;
+            for (int ii = 0; ii < thread_count - 1; ii++) {
+                threads.push_back(
+                    std::thread([&]() { worker(queue, e, lock); }));
+            }
+
+            for (int chunk_id = 0; !file.eof(); chunk_id++) {
+                queue.enqueue({chunk_id, next_chunk(file, 5e6)});
+            }
+            queue.set_eof();
+
+            for (auto &t : threads) {
+                if (t.joinable())
+                    t.join();
+            }
+        } else {
+            for (int chunk_id = 0; !file.eof(); chunk_id++) {
+                csv::parse_body(e, next_chunk(file, 1e6), -1, lock);
+            }
+        }
     }
 }
