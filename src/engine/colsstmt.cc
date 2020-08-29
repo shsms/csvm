@@ -10,8 +10,9 @@ void colsstmt::add_bang() { exclude = true; }
 
 std::string colsstmt::string() {
     std::string excl = "keep:";
-    if (exclude == true)
+    if (exclude) {
         excl = "exclude:";
+    }
     std::string ret = "cols:" + excl + "\n";
     if (col_pos.size() == columns.size()) {
         for (auto ii = 0; ii < col_pos.size(); ii++) {
@@ -27,7 +28,7 @@ std::string colsstmt::string() {
 }
 
 void colsstmt::set_header(models::header_row &h) {
-    if (exclude == true) {
+    if (exclude) {
         set_exclude_header(h);
         return;
     }
@@ -42,7 +43,7 @@ void colsstmt::set_header(models::header_row &h) {
                 break;
             }
         }
-        if (found == false) {
+        if (!found) {
             throw std::runtime_error("column not found in header:" + col);
         }
     }
@@ -59,7 +60,7 @@ void colsstmt::set_exclude_header(models::header_row &h) {
                 break;
             }
         }
-        if (found == false) {
+        if (!found) {
             col_pos.push_back(ii);
             out_headers.push_back(h[ii]);
         }
@@ -68,7 +69,7 @@ void colsstmt::set_exclude_header(models::header_row &h) {
 }
 
 bool colsstmt::apply(models::row &row,
-                     std::stack<models::value> &eval_stack) const {
+                     std::stack<models::value> & /*eval_stack*/) const {
     models::row ret;
     for (auto pos : col_pos) {
         ret.push_back(row[pos]);

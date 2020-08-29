@@ -19,8 +19,9 @@ class spin_lock {
 
   public:
     void lock() {
-        while (flag.test_and_set(std::memory_order_acquire))
+        while (flag.test_and_set(std::memory_order_acquire)) {
             std::this_thread::sleep_for(1000ns);
+        }
     }
 
     void unlock() { flag.clear(std::memory_order_release); }

@@ -19,13 +19,15 @@ class ordering_lock {
   public:
     void lock(int pos) {
         auto vv = order.load(std::memory_order_relaxed);
-        if (pos == vv)
+        if (pos == vv) {
             return;
+        }
         while (!order_cond.wait_for(flock, 5ms, [&]() {
             vv = order.load(std::memory_order_relaxed);
             return pos == vv;
-        }))
+        })) {
             ;
+        }
     }
 
     void unlock() {

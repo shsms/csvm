@@ -36,7 +36,7 @@ class engine {
 
     bool apply(models::row &row, std::stack<models::value> &eval_stack) const;
     std::string string();
-    bool has_header();
+    bool has_header() const;
     void set_header(models::header_row &h);
 };
 } // namespace engine

@@ -15,16 +15,18 @@ std::string next_chunk(std::ifstream &file, uint64_t max_chunk_size) {
     auto end = file.tellg();
     auto chunksize = end - beginning;
 
-    if (chunksize > max_chunk_size)
+    if (chunksize > max_chunk_size) {
         chunksize = max_chunk_size;
+    }
     chunk.resize(chunksize);
     file.seekg(beginning);
     file.read(&chunk[0], chunk.size());
     if (!file.eof()) {
         std::string line;
         std::getline(file, line);
-        if (line.length() > 0)
-            chunk += std::move(line);
+        if (line.length() > 0) {
+            chunk += line;
+        }
     }
     return chunk;
 }
@@ -45,11 +47,12 @@ int main(int argc, char *argv[]) {
         // fmt::print(e.string());
 
         std::ifstream file("tq.csv", std::ios::in | std::ios::binary);
-        if (e.has_header() == false) {
+        if (!e.has_header()) {
             std::string header;
             std::getline(file, header);
-            if (header.length() == 0)
+            if (header.length() == 0) {
                 throw std::runtime_error("couldn't read header");
+            }
             csv::parse_header(e, std::move(header));
         }
 
@@ -60,7 +63,8 @@ int main(int argc, char *argv[]) {
             threading::queue queue(1000);
 
             std::vector<std::thread> threads;
-            for (int ii = 0; ii < thread_count - 1; ii++) {
+            threads.reserve(thread_count);
+            for (int ii = 0; ii < thread_count; ii++) {
                 threads.push_back(
                     std::thread([&]() { worker(queue, e, lock); }));
             }
@@ -71,8 +75,9 @@ int main(int argc, char *argv[]) {
             queue.set_eof();
 
             for (auto &t : threads) {
-                if (t.joinable())
+                if (t.joinable()) {
                     t.join();
+                }
             }
         } else {
             for (int chunk_id = 0; !file.eof(); chunk_id++) {

@@ -78,11 +78,11 @@ struct to_num_stmt
 
 template <> struct control<to_num_stmt> : normal<to_num_stmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.new_stmt<engine::to_num_stmt>(); // TODO: fix
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
@@ -94,11 +94,11 @@ struct to_str_stmt
 
 template <> struct control<to_str_stmt> : normal<to_str_stmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.new_stmt<engine::to_str_stmt>(); // TODO: fix
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
@@ -110,11 +110,11 @@ struct colsstmt
 
 template <> struct control<colsstmt> : normal<colsstmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.new_stmt<engine::colsstmt>();
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
@@ -129,22 +129,22 @@ struct selectstmt : seq<select, oparan, expr, cparan> {};
 
 template <> struct control<selectstmt> : normal<selectstmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.new_stmt<engine::selectstmt>();
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
 
 template <> struct control<expr_group> : normal<expr_group> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.add_oper("(");
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.add_oper(")");
     }
 };
@@ -171,7 +171,7 @@ template <> struct action<ident> {
 
 template <> struct action<bang> {
     template <typename Input>
-    static void apply(const Input &in, engine::engine &e) {
+    static void apply(const Input & /*in*/, engine::engine &e) {
         e.add_bang();
     }
 };

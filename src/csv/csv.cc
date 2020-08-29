@@ -35,7 +35,8 @@ template <> struct action<header_value> {
 };
 
 template <> struct action<header_line> {
-    template <typename Input> static void apply(const Input &in, csv &csv) {
+    template <typename Input>
+    static void apply(const Input & /*in*/, csv &csv) {
         csv.set_header();
     }
 };
@@ -47,7 +48,8 @@ template <> struct action<value> {
 };
 
 template <> struct action<line> {
-    template <typename Input> static void apply(const Input &in, csv &csv) {
+    template <typename Input>
+    static void apply(const Input & /*in*/, csv &csv) {
         csv.new_row();
     }
 };
@@ -57,26 +59,29 @@ inline void csv::add_value(std::string &&v) { curr_row.emplace_back(v); }
 inline void csv::set_header() { e.set_header(header); }
 
 void csv::new_row() {
-    if (e.apply(curr_row, eval_stack) == false) {
+    if (!e.apply(curr_row, eval_stack)) {
         curr_row.clear();
         return;
     }
 
     static const std::string comma_str = ",";
     static const std::string newline = "\n";
-    for (auto ii = 0; ii < curr_row.size(); ii++)
-        if (ii == 0)
+    for (auto ii = 0; ii < curr_row.size(); ii++) {
+        if (ii == 0) {
             print_buffer += std::get<std::string>(curr_row[ii]);
-        else
+        } else {
             print_buffer += comma_str + std::get<std::string>(curr_row[ii]);
+        }
+    }
     print_buffer += newline;
 
     curr_row.clear();
 }
 
 void csv::print() noexcept {
-    if (print_buffer.length() > 0)
+    if (print_buffer.length() > 0) {
         std::cout << print_buffer;
+    }
 }
 
 void parse_body(engine::engine &e, std::string &&data, int token,

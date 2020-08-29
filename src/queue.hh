@@ -18,7 +18,7 @@ struct chunk {
 using namespace std::chrono_literals;
 
 class queue {
-    int limit = 10;
+    int limit;
     std::queue<chunk> q;
     std::atomic<int> size{0};
     std::atomic<bool> eof{false};
@@ -32,9 +32,10 @@ class queue {
     void enqueue(chunk &&item) {
         std::unique_lock lock(mu);
         if (size >= limit) {
-            while (
-                !enq_cond.wait_for(lock, 10ms, [&]() { return size < limit; }))
+            while (!enq_cond.wait_for(lock, 10ms,
+                                      [&]() { return size < limit; })) {
                 ;
+            }
         }
         q.emplace(std::move(item));
         size++;
@@ -48,10 +49,12 @@ class queue {
 
     std::optional<chunk> dequeue() {
         std::unique_lock lock(mu);
-        if (q.empty() && !eof)
+        if (q.empty() && !eof) {
             while (!deq_cond.wait_for(lock, 10ms,
-                                      [&]() { return eof || !q.empty(); }))
+                                      [&]() { return eof || !q.empty(); })) {
                 ;
+            }
+        }
         if (!q.empty()) {
             auto ret = std::move(q.front());
             q.pop();

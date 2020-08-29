@@ -48,10 +48,10 @@ inline bool value_gt(const value &a, const value &b) { return a > b; }
 inline void to_num(value &a) {
     double vv = 0.0;
     auto str = std::get<std::string>(a);
-    if (str.size() > 0) {
+    if (!str.empty()) {
         try {
             vv = std::stod(str);
-        } catch (std::invalid_argument) {
+        } catch (std::invalid_argument &) {
             throw std::invalid_argument(std::string("non-numeric value '") +
                                         str + "'");
         }

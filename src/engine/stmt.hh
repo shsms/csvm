@@ -11,11 +11,11 @@ class stmt {
     virtual void add_ident(const std::string &) = 0;
     virtual void set_header(models::header_row &) = 0;
 
-    virtual void add_str(const std::string &) {
+    virtual void add_str(const std::string & /*unused*/) {
         throw std::runtime_error("stmt::add_str not implemented");
     }
 
-    virtual void add_num(const std::string &) {
+    virtual void add_num(const std::string & /*unused*/) {
         throw std::runtime_error("stmt::add_num not implemented");
     }
 
@@ -23,7 +23,7 @@ class stmt {
         throw std::runtime_error("stmt::add_bang not implemented");
     }
 
-    virtual void add_oper(const std::string &) {
+    virtual void add_oper(const std::string & /*unused*/) {
         throw std::runtime_error("stmt::add_oper not implemented");
     }
 

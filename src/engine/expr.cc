@@ -38,13 +38,15 @@ void expr::add_oper(const std::string &oper) {
             if (oper == ")" && a->string() == "(") {
                 stack.pop_back();
                 break;
-            } else if (a->string() == "(") {
+            }
+            if (a->string() == "(") {
                 break;
             }
             steps.emplace_back(a);
             stack.pop_back();
-            if (stack.empty())
+            if (stack.empty()) {
                 break;
+            }
             a = stack.back();
         }
     }
@@ -88,11 +90,11 @@ void expr::finalize() {
 }
 std::string expr::string() {
     std::string ret;
-    for (auto step : steps) {
+    for (const auto &step : steps) {
         ret += step->string() + " ";
     }
     ret += "\n";
-    for (auto step : stack) {
+    for (const auto &step : stack) {
         ret += step->string() + " ";
     }
     ret += "\n\n";
@@ -107,7 +109,7 @@ void expr::set_header(models::header_row &h) {
 
 bool expr::apply(models::row &row,
                  std::stack<models::value> &eval_stack) const {
-    for (auto step : steps) {
+    for (const auto &step : steps) {
         step->apply(row, eval_stack);
     }
     return std::get<bool>(eval_stack.top());
