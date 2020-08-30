@@ -1,5 +1,6 @@
 #include "csv.hh"
 #include "../order.hh"
+#include "../queue.hh"
 #include <fmt/format.h>
 #include <stack>
 #include <tao/pegtl.hpp>
@@ -85,7 +86,8 @@ void csv::print() noexcept {
 }
 
 void parse_body(engine::engine &e, std::string &&data, int token,
-                threading::ordering_lock &lock) {
+                threading::ordering_lock & /*lock*/,
+                threading::queue &print_queue) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
@@ -94,13 +96,7 @@ void parse_body(engine::engine &e, std::string &&data, int token,
     csv csv(e, data.size());
     string_input in(std::move(data), "csv");
     parse<file, action>(in, csv);
-    if (token >= 0) {
-        lock.lock(token);
-        csv.print();
-        lock.unlock();
-    } else {
-        csv.print();
-    }
+    print_queue.enqueue({token, csv.get_buffer()});
 }
 
 void parse_header(engine::engine &e, std::string &&h) {

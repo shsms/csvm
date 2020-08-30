@@ -8,11 +8,11 @@
 
 namespace engine::expr {
 class token {
-  protected:
     const std::string str_repr;
 
   public:
     token(std::string s) : str_repr(std::move(s)) {}
+    virtual ~token() {}
     virtual void apply(const models::row &,
                        std::stack<models::value> &) const = 0;
     virtual void set_header(const models::header_row & /*unused*/){};

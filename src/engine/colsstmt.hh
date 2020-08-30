@@ -17,7 +17,6 @@ class colsstmt : public stmt {
 
   public:
     colsstmt();
-    virtual ~colsstmt(){};
 
     void add_ident(const std::string &col) override;
     void add_bang() override;

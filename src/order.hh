@@ -22,6 +22,9 @@ class ordering_lock {
         if (pos == vv) {
             return;
         }
+        // using wait_for 5ms here, because sometimes, the
+        // order_cond.notify_all() call in the unlock function
+        // fails to wake up a thread and the whole thing dead-locks.
         while (!order_cond.wait_for(flock, 5ms, [&]() {
             vv = order.load(std::memory_order_relaxed);
             return pos == vv;

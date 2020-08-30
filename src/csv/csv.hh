@@ -1,6 +1,7 @@
 #include "../engine/engine.hh"
 #include "../models/models.hh"
 #include "../order.hh"
+#include "../queue.hh"
 #include <stack>
 #include <string>
 
@@ -22,10 +23,11 @@ class csv {
     void add_value(std::string &&);
     void new_row();
     void print() noexcept;
+    std::string get_buffer() { return std::move(print_buffer); };
 };
 
 // TODO: make engine& a const ref after migrating parse_body
 void parse_body(engine::engine &, std::string &&, int,
-                threading::ordering_lock &);
+                threading::ordering_lock &, threading::queue &);
 void parse_header(engine::engine &, std::string &&);
 } // namespace csv

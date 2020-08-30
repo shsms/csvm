@@ -20,7 +20,7 @@ using namespace std::chrono_literals;
 class queue {
     int limit;
     std::queue<chunk> q;
-    std::atomic<int> size{0};
+    std::atomic<std::size_t> q_size{0};
     std::atomic<bool> eof{false};
     std::condition_variable_any enq_cond, deq_cond;
 
@@ -31,14 +31,14 @@ class queue {
 
     void enqueue(chunk &&item) {
         std::unique_lock lock(mu);
-        if (size >= limit) {
+        if (q_size >= limit) {
             while (!enq_cond.wait_for(lock, 10ms,
-                                      [&]() { return size < limit; })) {
+                                      [&]() { return q_size < limit; })) {
                 ;
             }
         }
         q.emplace(std::move(item));
-        size++;
+        q_size++;
         deq_cond.notify_one();
     }
 
@@ -58,12 +58,14 @@ class queue {
         if (!q.empty()) {
             auto ret = std::move(q.front());
             q.pop();
-            size--;
+            q_size--;
             enq_cond.notify_one();
             return ret;
         }
         return {};
     }
+
+    std::size_t size() const { return q_size; }
 };
 } // namespace threading
 #endif /* CSVQ_QUEUE_HH */

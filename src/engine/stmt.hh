@@ -8,6 +8,7 @@ namespace engine {
 
 class stmt {
   public:
+    virtual ~stmt(){};
     virtual void add_ident(const std::string &) = 0;
     virtual void set_header(models::header_row &) = 0;
 
