@@ -2,7 +2,6 @@
 #include "engine/engine.hh"
 #include "order.hh"
 #include "parser/parser.hh"
-#include "print.hh"
 #include "queue.hh"
 #include <fstream>
 #include <iostream>
@@ -32,16 +31,6 @@ std::string next_chunk(std::ifstream &file, uint64_t max_chunk_size) {
     return chunk;
 }
 
-void worker(threading::queue &queue, engine::engine &e,
-            threading::ordering_lock &lock, threading::queue &print_queue) {
-    auto chunk = queue.dequeue();
-    while (chunk.has_value()) {
-        csv::parse_body(e, std::move(chunk->data), chunk->id, lock,
-                        print_queue);
-        chunk = queue.dequeue();
-    }
-}
-
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         // questions creates imbalance, and answers that fit resolve them.
@@ -55,53 +44,27 @@ int main(int argc, char *argv[]) {
     auto queue_size = 4;             // TODO: cliparam
     auto chunk_size = 5e5;           // TODO: cliparam
 
-    engine::engine e;
+    engine::engine e(thread_count, queue_size);
     parser::run(script, e);
-    // fmt::print(e.string());
+
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!e.has_header()) {
-        std::string header;
-        std::getline(file, header);
-        if (header.length() == 0) {
-            throw std::runtime_error("couldn't read header");
+        std::string header_raw;
+        std::getline(file, header_raw);
+        if (header_raw.length() == 0) {
+            std::cerr << "couldn't read header from file\n";
+            return -42;
         }
-        // TODO: make parse_header return hrow, assign here,
-        // instead of passing the engine to it.  then make
-        // csv::parse_body take const reference to engine.
-        csv::parse_header(e, std::move(header));
+        e.set_header(csv::parse_header(std::move(header_raw)));
     }
 
-    if (thread_count < 1) {
-        thread_count = 1;
-    }
+    e.start();
 
-    threading::ordering_lock lock;
-    threading::queue input_queue(queue_size);
-    threading::queue print_queue(queue_size);
+    auto &input_queue = e.get_input_queue();
 
-    std::thread print_thread([&]() { threading::print_worker(print_queue); });
-
-    std::vector<std::thread> threads;
-    threads.reserve(thread_count);
-    for (int ii = 0; ii < thread_count; ii++) {
-        threads.push_back(
-            std::thread([&]() { worker(input_queue, e, lock, print_queue); }));
-    }
-
-    for (int chunk_id = 0; !file.eof(); chunk_id++) {
+    for (int chunk_id = 0; !file.eof(); ++chunk_id) {
         input_queue.enqueue({chunk_id, next_chunk(file, chunk_size)});
     }
-    input_queue.set_eof();
 
-    for (auto &t : threads) {
-        if (t.joinable()) {
-            t.join();
-        }
-    }
-
-    print_queue.set_eof();
-
-    if (print_thread.joinable()) {
-        print_thread.join();
-    }
+    e.cleanup();
 }

@@ -8,26 +8,17 @@
 namespace csv {
 
 class csv {
-    engine::engine &e;
-    std::string print_buffer;
-    std::stack<models::value> eval_stack;
+    models::row curr_row;
+    models::bin_chunk processed;
 
   public:
-    models::header_row header;
-    models::row curr_row;
-
-    csv(engine::engine &e, size_t inp_size) : e{e} {
-        print_buffer.reserve(inp_size);
-    }
-    void set_header();
-    void add_value(std::string &&);
+    csv(int id) :processed({.id = id}) { }
     void new_row();
-    void print() noexcept;
-    std::string get_buffer() { return std::move(print_buffer); };
+    void add_value(std::string &&);
+    models::bin_chunk get();
 };
 
 // TODO: make engine& a const ref after migrating parse_body
-void parse_body(engine::engine &, std::string &&, int,
-                threading::ordering_lock &, threading::queue &);
-void parse_header(engine::engine &, std::string &&);
+models::bin_chunk parse_body(models::raw_chunk &&);
+models::header_row parse_header(std::string &&);
 } // namespace csv

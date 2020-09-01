@@ -1,11 +1,13 @@
 #ifndef CSVQ_ENGINE_H
 #define CSVQ_ENGINE_H
 
+#include "../queue.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <memory>
 #include <stack>
 #include <string>
+#include <thread>
 #include <vector>
 namespace engine {
 
@@ -20,8 +22,17 @@ class engine {
     std::vector<tblock> tblocks;
     bool header_set = false;
 
+    int thread_count{}, queue_size{};
+
+    threading::queue<models::raw_chunk> input_queue;
+    threading::queue<models::raw_chunk> print_queue;
+    std::vector<std::thread> worker_threads;
+    std::thread print_thread;
+
   public:
-    template <class T> void new_stmt() {
+    engine(int trd_cnt, int q_sz) : thread_count(trd_cnt), queue_size(q_sz) {}
+
+    template <typename T> void new_stmt() {
         curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());
     }
     void finish_stmt();
@@ -31,13 +42,15 @@ class engine {
     void add_num(const std::string &);
     void add_bang();
     void add_oper(const std::string &);
-    void begin_method(const std::string &);
-    void end_method();
+
+    void start();
+    void cleanup();
+    inline auto &get_input_queue() { return input_queue; }
 
     bool apply(models::row &row, std::stack<models::value> &eval_stack) const;
     std::string string();
     bool has_header() const;
-    void set_header(models::header_row &h);
+    void set_header(models::header_row &&h);
 };
 } // namespace engine
 

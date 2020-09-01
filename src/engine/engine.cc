@@ -1,10 +1,67 @@
 #include "engine.hh"
+#include "../csv/csv.hh"
 #include "../models/models.hh"
 #include "colsstmt.hh"
 #include "selectstmt.hh"
 #include <iostream>
 
 namespace engine {
+
+models::raw_chunk to_raw_chunk(models::bin_chunk &&bin_chunk) {
+    static const std::string comma_str = ",";
+    static const std::string newline = "\n";
+    std::string print_buffer;
+
+    for (auto &row : bin_chunk.data) {
+        for (auto ii = 0; ii < row.size(); ii++) {
+            if (ii == 0) {
+                print_buffer += std::get<std::string>(row[ii]);
+            } else {
+                print_buffer += comma_str + std::get<std::string>(row[ii]);
+            }
+        }
+        print_buffer += newline;
+    }
+
+    return {bin_chunk.id, std::move(print_buffer)};
+}
+
+void worker(threading::queue<models::raw_chunk> &queue, const engine &e,
+            threading::queue<models::raw_chunk> &print_queue) {
+    std::stack<models::value> tmp_eval_stack;
+    auto chunk = queue.dequeue();
+    while (chunk.has_value()) {
+        auto bin_chunk = csv::parse_body(std::move(chunk.value()));
+        for (auto &row : bin_chunk.data) {
+            e.apply(row, tmp_eval_stack);
+        }
+        print_queue.enqueue(to_raw_chunk(std::move(bin_chunk)));
+        chunk = queue.dequeue();
+    }
+}
+
+void print_worker(threading::queue<models::raw_chunk> &queue) {
+    int next = 0;
+    std::unordered_map<int, std::string> items;
+
+    auto chunk = queue.dequeue();
+    while (chunk.has_value()) {
+        if (chunk->id == next) {
+            std::cout << chunk->data;
+            ++next;
+            while (items.count(next) > 0) {
+                std::cout << items.at(next);
+                // TODO:  reusing strings helps avoid reallocation
+                // probably has an impact only in super large files.
+                items.erase(next);
+                ++next;
+            }
+        } else {
+            items.emplace(chunk->id, std::move(chunk->data));
+        }
+        chunk = queue.dequeue();
+    }
+}
 
 void engine::finish_stmt() {
     curr_stmt->finalize();
@@ -44,7 +101,7 @@ std::string engine::string() {
     return ret;
 };
 
-void engine::set_header(models::header_row &h) {
+void engine::set_header(models::header_row &&h) {
     header_set = true;
     for (auto &s : curr_block) {
         s->set_header(h);
@@ -62,4 +119,39 @@ void engine::set_header(models::header_row &h) {
 }
 
 bool engine::has_header() const { return header_set; }
+
+void engine::start() {
+    input_queue.set_limit(queue_size);
+    print_queue.set_limit(queue_size);
+
+    print_thread = std::thread([&]() { print_worker(print_queue); });
+
+    if (thread_count < 1) {
+        thread_count = 1;
+    }
+
+    worker_threads.reserve(thread_count);
+
+    for (int ii = 0; ii < thread_count; ii++) {
+        worker_threads.push_back(
+            std::thread([&]() { worker(input_queue, *this, print_queue); }));
+    }
+}
+
+void engine::cleanup() {
+    input_queue.set_eof();
+
+    for (auto &t : worker_threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+
+    print_queue.set_eof();
+
+    if (print_thread.joinable()) {
+        print_thread.join();
+    }
+}
+
 } // namespace engine

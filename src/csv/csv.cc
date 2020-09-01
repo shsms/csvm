@@ -29,16 +29,10 @@ struct hfile : seq<header_line, file> {};
 template <typename Rule> struct action {};
 
 template <> struct action<header_value> {
-    template <typename Input> static void apply(const Input &in, csv &csv) {
-        csv.header.emplace_back(
-            models::col_header{.name = in.string(), .type = models::string_t});
-    }
-};
-
-template <> struct action<header_line> {
     template <typename Input>
-    static void apply(const Input & /*in*/, csv &csv) {
-        csv.set_header();
+    static void apply(const Input &in, models::header_row &header) {
+        header.emplace_back(
+            models::col_header{.name = in.string(), .type = models::string_t});
     }
 };
 
@@ -57,51 +51,31 @@ template <> struct action<line> {
 
 inline void csv::add_value(std::string &&v) { curr_row.emplace_back(v); }
 
-inline void csv::set_header() { e.set_header(header); }
+inline models::bin_chunk csv::get() { return std::move(processed); }
 
 void csv::new_row() {
-    if (!e.apply(curr_row, eval_stack)) {
-        curr_row.clear();
-        return;
-    }
-
-    static const std::string comma_str = ",";
-    static const std::string newline = "\n";
-    for (auto ii = 0; ii < curr_row.size(); ii++) {
-        if (ii == 0) {
-            print_buffer += std::get<std::string>(curr_row[ii]);
-        } else {
-            print_buffer += comma_str + std::get<std::string>(curr_row[ii]);
-        }
-    }
-    print_buffer += newline;
-
-    curr_row.clear();
+    processed.data.emplace_back(std::move(curr_row));
+    // curr_row.clear();
 }
 
-void csv::print() noexcept {
-    if (print_buffer.length() > 0) {
-        std::cout << print_buffer;
-    }
-}
-
-void parse_body(engine::engine &e, std::string &&data, int token,
-                threading::ordering_lock & /*lock*/,
-                threading::queue &print_queue) {
+models::bin_chunk parse_body(models::raw_chunk &&chunk) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
     //     fmt::print("analyze success\n");
     // }
-    csv csv(e, data.size());
-    string_input in(std::move(data), "csv");
+    csv csv(chunk.id);
+    string_input in(std::move(chunk.data), "csv");
     parse<file, action>(in, csv);
-    print_queue.enqueue({token, csv.get_buffer()});
+    return csv.get();
 }
 
-void parse_header(engine::engine &e, std::string &&h) {
-    csv csv(e, h.size());
+models::header_row parse_header(std::string &&h) {
+    models::header_row header;
+
     string_input in(std::move(h), "header");
-    parse<header_line, action>(in, csv);
+    parse<header_line, action>(in, header);
+
+    return header;
 }
 } // namespace csv

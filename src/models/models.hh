@@ -22,6 +22,16 @@ using value = std::variant<std::string, double, bool>;
 
 using row = std::vector<value>;
 
+struct raw_chunk {
+    int id;
+    std::string data;
+};
+
+struct bin_chunk {
+    int id;    
+    std::vector<row> data;
+};
+
 struct col_header {
     std::string name;
     value_t type;
