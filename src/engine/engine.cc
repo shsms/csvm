@@ -7,17 +7,20 @@
 
 namespace engine {
 
-models::raw_chunk to_raw_chunk(models::bin_chunk &&bin_chunk) {
+models::raw_chunk to_raw_chunk(models::bin_chunk &bin_chunk) {
     static const std::string comma_str = ",";
     static const std::string newline = "\n";
     std::string print_buffer;
-
-    for (auto &row : bin_chunk.data) {
-        for (auto ii = 0; ii < row.size(); ii++) {
-            if (ii == 0) {
-                print_buffer += std::get<std::string>(row[ii]);
+    for (int ii = 0; ii < bin_chunk.length; ii++) {
+	if (!bin_chunk.data[ii].second) {
+	    continue;
+	}
+	const auto &row = bin_chunk.data[ii];
+        for (auto jj = 0; jj < row.first.size(); jj++) {
+            if (jj == 0) {
+                print_buffer += std::get<std::string>(row.first[jj]);
             } else {
-                print_buffer += comma_str + std::get<std::string>(row[ii]);
+                print_buffer += comma_str + std::get<std::string>(row.first[jj]);
             }
         }
         print_buffer += newline;
@@ -29,13 +32,15 @@ models::raw_chunk to_raw_chunk(models::bin_chunk &&bin_chunk) {
 void worker(threading::queue<models::raw_chunk> &queue, const engine &e,
             threading::queue<models::raw_chunk> &print_queue) {
     std::stack<models::value> tmp_eval_stack;
+    models::bin_chunk parsed;
+    
     auto chunk = queue.dequeue();
     while (chunk.has_value()) {
-        auto bin_chunk = csv::parse_body(std::move(chunk.value()));
-        for (auto &row : bin_chunk.data) {
-            e.apply(row, tmp_eval_stack);
+        csv::parse_body(std::move(chunk.value()), parsed);
+        for (int ii = 0;  ii < parsed.length; ii++) {
+            parsed.data[ii].second = e.apply(parsed.data[ii], tmp_eval_stack);
         }
-        print_queue.enqueue(to_raw_chunk(std::move(bin_chunk)));
+        print_queue.enqueue(to_raw_chunk(parsed));
         chunk = queue.dequeue();
     }
 }
@@ -121,8 +126,8 @@ void engine::set_header(models::header_row &&h) {
 bool engine::has_header() const { return header_set; }
 
 void engine::start() {
-    input_queue.set_limit(queue_size);
-    print_queue.set_limit(queue_size);
+    input_queue.set_limit(in_queue_size);
+    print_queue.set_limit(out_queue_size);
 
     print_thread = std::thread([&]() { print_worker(print_queue); });
 

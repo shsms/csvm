@@ -27,6 +27,9 @@ cleanAll: clean
 run: build
 	@$(TARGET_BIN) $(RUN_ARGS)
 
+valgrind: build
+	valgrind  --tool=callgrind $(TARGET_BIN) $(RUN_ARGS)
+
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	$(CXX) $(LDFLAGS) -o $@ $^
 

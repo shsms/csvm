@@ -22,7 +22,7 @@ class engine {
     std::vector<tblock> tblocks;
     bool header_set = false;
 
-    int thread_count{}, queue_size{};
+    int thread_count{}, in_queue_size{}, out_queue_size;
 
     threading::queue<models::raw_chunk> input_queue;
     threading::queue<models::raw_chunk> print_queue;
@@ -30,7 +30,7 @@ class engine {
     std::thread print_thread;
 
   public:
-    engine(int trd_cnt, int q_sz) : thread_count(trd_cnt), queue_size(q_sz) {}
+    engine(int trd_cnt, int in_q_sz, int out_q_sz) : thread_count(trd_cnt), in_queue_size(in_q_sz), out_queue_size(out_q_sz)  {}
 
     template <typename T> void new_stmt() {
         curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());

@@ -72,7 +72,7 @@ bool colsstmt::apply(models::row &row,
                      std::stack<models::value> & /*eval_stack*/) const {
     models::row ret;
     for (auto pos : col_pos) {
-        ret.push_back(row[pos]);
+        ret.first.push_back(row.first[pos]);
     }
     row = std::move(ret);
     return true;

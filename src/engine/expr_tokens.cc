@@ -6,7 +6,7 @@ ident::ident(const std::string &s) : token(s) { value = s; }
 
 void ident::apply(const models::row &row,
                   std::stack<models::value> &eval_stack) const {
-    eval_stack.emplace(row[col_pos]);
+    eval_stack.emplace(row.first[col_pos]);
 }
 
 void ident::set_header(const models::header_row &h) {

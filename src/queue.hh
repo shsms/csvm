@@ -24,9 +24,7 @@ template <typename T> class queue {
   public:
     void set_limit(int lim) { limit = lim; }
 
-    // SFINAE to make it move-only.
-    auto enqueue(T &&item) ->
-        typename std::enable_if_t<std::is_rvalue_reference_v<decltype(item)>> {
+    auto enqueue(T &&item) {
         std::unique_lock lock(mu);
         if (q_size >= limit) {
             while (!enq_cond.wait_for(lock, 10ms,

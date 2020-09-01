@@ -20,7 +20,7 @@ using value = std::variant<std::string, double, bool>;
 //     bool bool_v;
 // };
 
-using row = std::vector<value>;
+using row = std::pair<std::vector<value>, bool>;
 
 struct raw_chunk {
     int id;
@@ -30,6 +30,7 @@ struct raw_chunk {
 struct bin_chunk {
     int id;    
     std::vector<row> data;
+    int length;
 };
 
 struct col_header {

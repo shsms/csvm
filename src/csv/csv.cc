@@ -49,25 +49,28 @@ template <> struct action<line> {
     }
 };
 
-inline void csv::add_value(std::string &&v) { curr_row.emplace_back(v); }
-
-inline models::bin_chunk csv::get() { return std::move(processed); }
+inline void csv::add_value(std::string &&v) { parsed.data[curr_row].first.emplace_back(std::move(v)); }
 
 void csv::new_row() {
-    processed.data.emplace_back(std::move(curr_row));
-    // curr_row.clear();
+    ++curr_row;
+    if (parsed.data.size() <= curr_row) {
+	parsed.data.emplace_back(models::row{});
+    } else {
+	parsed.data[curr_row].first.clear();
+    }
 }
 
-models::bin_chunk parse_body(models::raw_chunk &&chunk) {
+void parse_body(models::raw_chunk &&chunk, models::bin_chunk &parsed) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
     //     fmt::print("analyze success\n");
     // }
-    csv csv(chunk.id);
+    parsed.id = chunk.id;
+    csv csv(parsed);
     string_input in(std::move(chunk.data), "csv");
     parse<file, action>(in, csv);
-    return csv.get();
+    parsed.length = csv.get_length();
 }
 
 models::header_row parse_header(std::string &&h) {
