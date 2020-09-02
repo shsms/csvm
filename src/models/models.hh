@@ -20,7 +20,18 @@ using value = std::variant<std::string, double, bool>;
 //     bool bool_v;
 // };
 
-using row = std::vector<value>;
+using row = std::pair<std::vector<value>, bool>;
+
+struct raw_chunk {
+    int id;
+    std::string data;
+};
+
+struct bin_chunk {
+    int id;    
+    std::vector<row> data;
+    int length;
+};
 
 struct col_header {
     std::string name;
@@ -39,25 +50,19 @@ inline bool string_equal(const std::string &a, const value &b) {
     return a == std::get<std::string>(b);
 }
 
-inline bool value_equal(const value &a, const value &b) {
-    return a == b;
-}
+inline bool value_equal(const value &a, const value &b) { return a == b; }
 
-inline bool value_lt(const value &a, const value &b) {
-    return a < b;
-}
+inline bool value_lt(const value &a, const value &b) { return a < b; }
 
-inline bool value_gt(const value &a, const value &b) {
-        return a > b;
-}
+inline bool value_gt(const value &a, const value &b) { return a > b; }
 
 inline void to_num(value &a) {
     double vv = 0.0;
     auto str = std::get<std::string>(a);
-    if (str.size() > 0) {
+    if (!str.empty()) {
         try {
             vv = std::stod(str);
-        } catch (std::invalid_argument) {
+        } catch (std::invalid_argument &) {
             throw std::invalid_argument(std::string("non-numeric value '") +
                                         str + "'");
         }
@@ -67,8 +72,8 @@ inline void to_num(value &a) {
 
 inline void to_str(value &a) {
     auto str = std::to_string(std::get<double>(a));
-    str.erase ( str.find_last_not_of('0') + 1, std::string::npos );
-    str.erase ( str.find_last_not_of('.') + 1, std::string::npos );
+    str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+    str.erase(str.find_last_not_of('.') + 1, std::string::npos);
     a = std::move(str);
 }
 

@@ -1,10 +1,13 @@
 #include "csv/csv.hh"
 #include "engine/engine.hh"
+#include "order.hh"
 #include "parser/parser.hh"
+#include "queue.hh"
 #include <fstream>
 #include <iostream>
+#include <thread>
 
-std::string next_chunk(std::ifstream &file) {
+std::string next_chunk(std::ifstream &file, uint64_t max_chunk_size) {
     std::string chunk;
 
     auto beginning = file.tellg();
@@ -12,36 +15,57 @@ std::string next_chunk(std::ifstream &file) {
     auto end = file.tellg();
     auto chunksize = end - beginning;
 
-    if (chunksize > 1.5e6)
-        chunksize = 1e6;
+    if (chunksize > max_chunk_size) {
+        chunksize = max_chunk_size;
+    }
     chunk.resize(chunksize);
     file.seekg(beginning);
     file.read(&chunk[0], chunk.size());
     if (!file.eof()) {
         std::string line;
         std::getline(file, line);
-        if (line.length() > 0)
-            chunk += std::move(line);
+        if (line.length() > 0) {
+            chunk += line;
+        }
     }
     return chunk;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc == 2) {
-        engine::engine e;
-        parser::run(argv[1], e);
-        // fmt::print(e.string());
-
-        std::ifstream file("tq.csv", std::ios::in | std::ios::binary);
-        if (e.has_header() == false) {
-            std::string header;
-            std::getline(file, header);
-            if (header.length() == 0)
-                throw std::runtime_error("couldn't read header");
-            csv::parse_header(e, std::move(header));
-        }
-
-        while (!file.eof())
-            csv::parse_body(e, next_chunk(file), -1);
+    if (argc != 2) {
+        // questions creates imbalance, and answers that fit resolve them.
+        // if 42 is the answer,  then the question has to be -42.
+        return -42;
     }
+
+    auto *script = argv[1];          // TODO: cliparam
+    const auto *filename = "tq.csv"; // TODO: cliparam
+    auto thread_count = 4;           // TODO: cliparam
+    auto in_queue_size = 4;            // TODO: cliparam
+    auto out_queue_size = 4;            // TODO: cliparam
+    auto chunk_size = 5e4;           // TODO: cliparam
+
+    engine::engine e(thread_count, in_queue_size, out_queue_size);
+    parser::run(script, e);
+
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if (!e.has_header()) {
+        std::string header_raw;
+        std::getline(file, header_raw);
+        if (header_raw.length() == 0) {
+            std::cerr << "couldn't read header from file\n";
+            return -42;
+        }
+        e.set_header(csv::parse_header(std::move(header_raw)));
+    }
+
+    e.start();
+
+    auto &input_queue = e.get_input_queue();
+
+    for (int chunk_id = 0; !file.eof(); ++chunk_id) {
+        input_queue.enqueue({chunk_id, next_chunk(file, chunk_size)});
+    }
+
+    e.cleanup();
 }

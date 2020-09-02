@@ -1,13 +1,17 @@
 #include "csv.hh"
+#include "../order.hh"
+#include "../queue.hh"
 #include <fmt/format.h>
+#include <stack>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
-#include <stack>
 
 namespace csv {
 using namespace tao::pegtl;
 
-template <char C> struct string_without : star<not_one<C, 10, 13>> {};
+const int TABCHAR = 10, RETCHAR = 13;
+
+template <char C> struct string_without : star<not_one<C, TABCHAR, RETCHAR>> {};
 struct plain_value : string_without<','> {};
 struct quoted_value : if_must<one<'"'>, string_without<'"'>, one<'"'>> {};
 struct value : sor<quoted_value, plain_value> {};
@@ -25,15 +29,10 @@ struct hfile : seq<header_line, file> {};
 template <typename Rule> struct action {};
 
 template <> struct action<header_value> {
-    template <typename Input> static void apply(const Input &in, csv &csv) {
-        csv.header.emplace_back(
+    template <typename Input>
+    static void apply(const Input &in, models::header_row &header) {
+        header.emplace_back(
             models::col_header{.name = in.string(), .type = models::string_t});
-    }
-};
-
-template <> struct action<header_line> {
-    template <typename Input> static void apply(const Input &in, csv &csv) {
-        csv.set_header();
     }
 };
 
@@ -44,57 +43,42 @@ template <> struct action<value> {
 };
 
 template <> struct action<line> {
-    template <typename Input> static void apply(const Input &in, csv &csv) {
+    template <typename Input>
+    static void apply(const Input & /*in*/, csv &csv) {
         csv.new_row();
     }
 };
 
-inline void csv::add_value(std::string &&v) { curr_row.emplace_back(v); }
-
-inline void csv::set_header() { e.set_header(header); }
+inline void csv::add_value(std::string &&v) { parsed.data[curr_row].first.emplace_back(std::move(v)); }
 
 void csv::new_row() {
-    if (e.apply(curr_row, eval_stack) == false) {
-        curr_row.clear();
-        return;
+    ++curr_row;
+    if (parsed.data.size() <= curr_row) {
+	parsed.data.emplace_back(models::row{});
+    } else {
+	parsed.data[curr_row].first.clear();
     }
-
-    static const std::string comma_str = ",";
-    static const std::string newline = "\n";
-    if (print_buffer.length() >= 1e4) {
-        std::cout << print_buffer;
-        print_buffer.clear();
-    }
-    for (auto ii = 0; ii < curr_row.size(); ii++)
-        if (ii == 0)
-            print_buffer += std::get<std::string>(curr_row[ii]);
-        else
-            print_buffer += comma_str + std::get<std::string>(curr_row[ii]);
-    print_buffer += newline;
-
-    curr_row.clear();
 }
 
-void csv::cleanup() {
-    if (print_buffer.length() > 0)
-        std::cout << print_buffer;
-}
-
-void parse_body(engine::engine &e, std::string &&data, int token) {
+void parse_body(models::raw_chunk &&chunk, models::bin_chunk &parsed) {
     // if (analyze<file>() != 0) {
     //     fmt::print("analyze failed");
     // } else {
     //     fmt::print("analyze success\n");
     // }
-    csv csv(e);
-    string_input in(std::move(data), "csv");
+    parsed.id = chunk.id;
+    csv csv(parsed);
+    string_input in(std::move(chunk.data), "csv");
     parse<file, action>(in, csv);
-    csv.cleanup();
+    parsed.length = csv.get_length();
 }
 
-void parse_header(engine::engine &e, std::string &&h) {
-    csv csv(e);
+models::header_row parse_header(std::string &&h) {
+    models::header_row header;
+
     string_input in(std::move(h), "header");
-    parse<header_line, action>(in, csv);
+    parse<header_line, action>(in, header);
+
+    return header;
 }
 } // namespace csv

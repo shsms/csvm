@@ -1,27 +1,30 @@
 #include "../engine/engine.hh"
 #include "../models/models.hh"
-#include <string>
+#include "../order.hh"
+#include "../queue.hh"
 #include <stack>
+#include <string>
 
 namespace csv {
 
 class csv {
-    engine::engine &e;
-    std::string print_buffer;
-    std::stack<models::value> eval_stack;
+    int curr_row{};
+    models::bin_chunk &parsed;
 
-public:
-    models::header_row header;
-    models::row curr_row;
-
-    csv(engine::engine &e):e{e} {}
-    void set_header();
-    void add_value(std::string&&);
+  public:
+    csv(models::bin_chunk &p) :parsed(p) {
+	if (parsed.data.size() == 0) {
+	    parsed.data.emplace_back(models::row{});
+	} else {
+	    parsed.data[0].first.clear();
+	}
+    }
     void new_row();
-    void cleanup();
+    void add_value(std::string &&);
+    inline int get_length() { return curr_row; }
 };
 
 // TODO: make engine& a const ref after migrating parse_body
-void parse_body(engine::engine &, std::string &&, int );
-void parse_header(engine::engine &, std::string &&);
+void parse_body(models::raw_chunk &&, models::bin_chunk &);
+models::header_row parse_header(std::string &&);
 } // namespace csv

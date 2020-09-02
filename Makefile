@@ -1,17 +1,17 @@
 CC=gcc
 CXX=g++
 CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
-LDFLAGS =
+LDFLAGS = -lpthread
 
-#RUN_ARGS = "select(E >= '303' || B == D); !cols(D)"
-RUN_ARGS = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
+#RUN_ARGS = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
 #RUN_ARGS = "select(type=='q');"
 #RUN_ARGS = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
-#RUN_ARGS = ""
+RUN_ARGS = ""
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
+ABS_HEADERS = $(shell find src -type f -name '*.hh')
 PROJECT_ROOT = $(shell pwd)
 TARGET_BIN = bin/csvq
 LIBFMT_TGT = build/.libs/fmt/libfmt.a
@@ -21,14 +21,14 @@ LIBS = $(LIBFMT_TGT)
 
 build: bin $(TARGET_BIN)
 
-clean:
-	rm -rf $(OBJS)
-
 cleanAll: clean
 	rm -rf build bin
 
 run: build
 	@$(TARGET_BIN) $(RUN_ARGS)
+
+valgrind: build
+	valgrind  --tool=callgrind $(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	$(CXX) $(LDFLAGS) -o $@ $^
@@ -42,6 +42,20 @@ DEP = $(OBJS:%.o=%.d)
 build/.objs/%.o: src/%.cc
 	@mkdir -p $(shell dirname $@)
 	$(CXX) $(CPPFLAGS) -MMD -c -o $@ $<
+
+clean:
+	rm -rf $(OBJS) $(DEP)
+
+format:
+	clang-format -i $(ABS_SRCS) $(ABS_HEADERS)
+
+tidy: format
+	clang-tidy --checks=readability-*,performance-*,cppcoreguidelines-*,bugprone-*,misc-* $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
+	make format
+
+tidy-fix: format
+	clang-tidy --checks=readability-*,performance-*,cppcoreguidelines-*,bugprone-*,misc-* --fix $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
+	make format
 
 .PRECIOUS: vendor/%/include
 vendor/%/include:

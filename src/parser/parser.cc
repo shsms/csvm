@@ -1,6 +1,6 @@
 #include "parser.hh"
-#include "../engine/engine.hh"
 #include "../engine/colsstmt.hh"
+#include "../engine/engine.hh"
 #include "../engine/selectstmt.hh"
 #include "../engine/to_num_stmt.hh"
 #include "../engine/to_str_stmt.hh"
@@ -34,7 +34,8 @@ struct op_and : two<'&'> {};
 struct op_or : two<'|'> {};
 struct op_assign : equ {};
 struct op_regex : string<'=', '~'> {};
-struct op_bool : sor<op_eq, op_ne, op_lte, op_gte, op_gt, op_lt, op_and, op_or, op_regex, op_assign> {};
+struct op_bool : sor<op_eq, op_ne, op_lte, op_gte, op_gt, op_lt, op_and, op_or,
+                     op_regex, op_assign> {};
 
 struct ident_first : ranges<'a', 'z', 'A', 'Z'> {};
 struct ident_uscore : ranges<'a', 'z', 'A', 'Z', '_'> {};
@@ -44,8 +45,8 @@ struct full_ident : list_must<ident, dot> {};
 
 struct uint_lit : plus<digit> {};
 struct sign : one<'+', '-'> {};
-    struct int_lit : seq<opt<sign>, uint_lit> {};
-    struct float_lit : seq<int_lit, opt<seq<dot, uint_lit>>> {};
+struct int_lit : seq<opt<sign>, uint_lit> {};
+struct float_lit : seq<int_lit, opt<seq<dot, uint_lit>>> {};
 struct num_lit : sor<int_lit, float_lit> {};
 struct char_escape : one<'a', 'b', 'f', 'n', 'r', 't', 'v', '\\', '\'', '"'> {};
 struct escape : if_must<one<'\\'>, char_escape> {};
@@ -77,11 +78,11 @@ struct to_num_stmt
 
 template <> struct control<to_num_stmt> : normal<to_num_stmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
-        e.new_stmt<engine::to_num_stmt>(); //TODO: fix
+    static void start(const Input & /*unused*/, engine::engine &e) {
+        e.new_stmt<engine::to_num_stmt>(); // TODO: fix
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
@@ -93,12 +94,11 @@ struct to_str_stmt
 
 template <> struct control<to_str_stmt> : normal<to_str_stmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.new_stmt<engine::to_str_stmt>(); // TODO: fix
-
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
@@ -110,11 +110,11 @@ struct colsstmt
 
 template <> struct control<colsstmt> : normal<colsstmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
-	e.new_stmt<engine::colsstmt>();
+    static void start(const Input & /*unused*/, engine::engine &e) {
+        e.new_stmt<engine::colsstmt>();
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
@@ -122,29 +122,29 @@ template <> struct control<colsstmt> : normal<colsstmt> {
 // select
 struct expr;
 struct expr_group : if_must<oparan, expr, cparan> {};
-struct expr_item : sor<ident, constant, expr_group>{};
-struct expr : list<expr_item, op_bool, sp>{};
+struct expr_item : sor<ident, constant, expr_group> {};
+struct expr : list<expr_item, op_bool, sp> {};
 struct select : string<'s', 'e', 'l', 'e', 'c', 't'> {};
 struct selectstmt : seq<select, oparan, expr, cparan> {};
 
 template <> struct control<selectstmt> : normal<selectstmt> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
-	e.new_stmt<engine::selectstmt>();
+    static void start(const Input & /*unused*/, engine::engine &e) {
+        e.new_stmt<engine::selectstmt>();
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.finish_stmt();
     }
 };
 
 template <> struct control<expr_group> : normal<expr_group> {
     template <typename Input>
-    static void start(const Input &, engine::engine &e) {
+    static void start(const Input & /*unused*/, engine::engine &e) {
         e.add_oper("(");
     }
     template <typename Input>
-    static void success(const Input &, engine::engine &e) {
+    static void success(const Input & /*unused*/, engine::engine &e) {
         e.add_oper(")");
     }
 };
@@ -171,7 +171,7 @@ template <> struct action<ident> {
 
 template <> struct action<bang> {
     template <typename Input>
-    static void apply(const Input &in, engine::engine &e) {
+    static void apply(const Input & /*in*/, engine::engine &e) {
         e.add_bang();
     }
 };
@@ -191,18 +191,15 @@ template <> struct action<num_lit> {
 };
 
 template <> struct action<block> {
-    template <typename Input> static void apply(const Input &in) {
-    }
+    template <typename Input> static void apply(const Input &in) {}
 };
 
 template <> struct action<thread_block> {
-    template <typename Input> static void apply(const Input &in) {
-    }
+    template <typename Input> static void apply(const Input &in) {}
 };
 
 template <> struct action<pgm> {
-    template <typename Input> static void apply(const Input &in) {
-    }
+    template <typename Input> static void apply(const Input &in) {}
 };
 
 void run(const std::string &program, engine::engine &e) {
