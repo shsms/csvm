@@ -1,5 +1,5 @@
-#ifndef CSVQ_ENGINE_H
-#define CSVQ_ENGINE_H
+#ifndef CSVM_ENGINE_H
+#define CSVM_ENGINE_H
 
 #include "../queue.hh"
 #include "stmt.hh"

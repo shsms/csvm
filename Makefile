@@ -14,7 +14,7 @@ OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
 ABS_HEADERS = $(shell find src -type f -name '*.hh')
 PROJECT_ROOT = $(shell pwd)
-TARGET_BIN = bin/csvq
+TARGET_BIN = bin/csvm
 LIBFMT_TGT = build/.libs/fmt/libfmt.a
 LIBS = $(LIBFMT_TGT)
 

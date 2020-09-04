@@ -1,5 +1,5 @@
-#ifndef CSVQ_CSV_HH
-#define CSVQ_CSV_HH
+#ifndef CSVM_CSV_HH
+#define CSVM_CSV_HM
 
 #include "../engine/engine.hh"
 #include "../models/models.hh"
@@ -86,4 +86,4 @@ inline models::header_row parse_header(std::string &&h) {
 
 } // namespace csv
 
-#endif /* CSVQ_CSV_HH */
+#endif /* CSVM_CSV_HH */

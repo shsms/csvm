@@ -1,5 +1,5 @@
-#ifndef CSVQ_ORDER_HH
-#define CSVQ_ORDER_HH
+#ifndef CSVM_ORDER_HH
+#define CSVM_ORDER_HH
 
 #include "locks.hh"
 #include <atomic>

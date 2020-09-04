@@ -1,5 +1,5 @@
-#ifndef CSVQ_QUEUE_HH
-#define CSVQ_QUEUE_HH
+#ifndef CSVM_QUEUE_HH
+#define CSVM_QUEUE_HH
 
 #include "locks.hh"
 #include <atomic>
@@ -63,4 +63,4 @@ template <typename T> class queue {
     std::size_t size() const { return q_size; }
 };
 } // namespace threading
-#endif /* CSVQ_QUEUE_HH */
+#endif /* CSVM_QUEUE_HH */

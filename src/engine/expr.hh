@@ -1,5 +1,5 @@
-#ifndef CSVQ_EXPR_H
-#define CSVQ_EXPR_H
+#ifndef CSVM_EXPR_H
+#define CSVM_EXPR_H
 
 #include "expr_tokens.hh"
 #include "stmt.hh"

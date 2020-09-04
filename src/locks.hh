@@ -1,5 +1,5 @@
-#ifndef CSVQ_FAKE_LOCK_HH
-#define CSVQ_FAKE_LOCK_HH
+#ifndef CSVM_FAKE_LOCK_HH
+#define CSVM_FAKE_LOCK_HH
 
 #include <atomic>
 #include <chrono>
@@ -29,4 +29,4 @@ class spin_lock {
 
 } // namespace threading
 
-#endif /* CSVQ_FAKE_LOCK_HH */
+#endif /* CSVM_FAKE_LOCK_HH */

@@ -1,5 +1,5 @@
-#ifndef CSVQ_STMT_H
-#define CSVQ_STMT_H
+#ifndef CSVM_STMT_H
+#define CSVM_STMT_H
 
 #include "../models/models.hh"
 #include <stack>

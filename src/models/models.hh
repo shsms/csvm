@@ -1,5 +1,5 @@
-#ifndef CSVQ_MODELS_H
-#define CSVQ_MODELS_H
+#ifndef CSVM_MODELS_H
+#define CSVM_MODELS_H
 
 #include <any>
 #include <fmt/format.h>
