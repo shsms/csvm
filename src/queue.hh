@@ -19,13 +19,13 @@ template <typename T> class queue {
     std::atomic<bool> eof{false};
     std::condition_variable_any enq_cond, deq_cond;
 
-    spin_lock mu;
+    spin_lock spin_mu;
 
   public:
     void set_limit(int lim) { limit = lim; }
 
     auto enqueue(T &&item) {
-        std::unique_lock lock(mu);
+        std::unique_lock lock(spin_mu);
         if (q_size >= limit) {
             while (!enq_cond.wait_for(lock, 10ms,
                                       [&]() { return q_size < limit; })) {
@@ -43,7 +43,7 @@ template <typename T> class queue {
     }
 
     std::optional<T> dequeue() {
-        std::unique_lock lock(mu);
+        std::unique_lock lock(spin_mu);
         if (q.empty() && !eof) {
             while (!deq_cond.wait_for(lock, 10ms,
                                       [&]() { return eof || !q.empty(); })) {
