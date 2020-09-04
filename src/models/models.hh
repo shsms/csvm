@@ -10,15 +10,8 @@
 #include <vector>
 
 namespace models {
-enum value_t { double_t, string_t, bool_t };
 
 using value = std::variant<std::string, double, bool>;
-// struct value {
-//     value_t type;
-//     std::string string_v;
-//     double double_v;
-//     bool bool_v;
-// };
 
 using row = std::vector<value>;
 
@@ -35,8 +28,7 @@ struct bin_chunk {
 
 struct col_header {
     std::string name;
-    value_t type;
-    // TODO: bool modified; // converts back to string if modified as number.
+    // TODO: add rename/alias info
 };
 
 using header_row = std::vector<col_header>;
@@ -89,7 +81,7 @@ inline void append_to_string(std::string &ret, const row &row) {
     }
     ret += newline;
 }
-// void append_to_string(const models::row &, std::string &);
+
 } // namespace models
 
 #endif

@@ -3,10 +3,11 @@ CXX=g++
 CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
 LDFLAGS = -lpthread
 
-#RUN_ARGS = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
-#RUN_ARGS = "select(type=='q');"
-#RUN_ARGS = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
-RUN_ARGS = ""
+RUN_ARGS = -n 4 -f tq.csv
+#SCRIPT = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
+SCRIPT = "select(type=='q');"
+#SCRIPT = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
+#SCRIPT = ""
 SRCS = $(shell cd src && find * -type f -name '*.cc')
 
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
@@ -25,7 +26,7 @@ cleanAll: clean
 	rm -rf build bin
 
 run: build
-	@$(TARGET_BIN) $(RUN_ARGS)
+	@$(TARGET_BIN) ${RUN_ARGS} $(SCRIPT)
 
 valgrind: build
 	valgrind  --tool=callgrind $(TARGET_BIN) $(RUN_ARGS)

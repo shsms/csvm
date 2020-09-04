@@ -1,3 +1,4 @@
+#include "CLI11.hpp"
 #include "csv/csv.hh"
 #include "engine/engine.hh"
 #include "order.hh"
@@ -32,23 +33,55 @@ std::string next_chunk(std::ifstream &file, uint64_t max_chunk_size) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
+    CLI::App app;
+
+    std::string filename{"/dev/stdin"};
+    std::string script;
+    int thread_count{1};
+    int in_queue_size{};
+    int out_queue_size{};
+    double chunk_size{1e6};
+    app.add_option(
+           "-f", filename,
+           "csv filename, required until next_stdin_chunk is implemented")
+        ->required()
+        ->check(CLI::ExistingFile);
+    app.add_option("script", script, "script to execute")->required();
+    app.add_option("-n", thread_count, "number of threads, defaults to 1");
+    app.add_option("--in-queue-size", in_queue_size,
+                   "defaults to number of threads");
+    app.add_option("--out-queue-size", out_queue_size,
+                   "defaults to number of threads");
+    app.add_option("--chunk_size", chunk_size,
+                   "size in bytes of each input chunk, defaults to 1e6");
+
+    try {
+        app.parse(argc, argv);
+    } catch (const CLI::ParseError &e) {
         // questions creates imbalance, and answers that fit resolve them.
         // if 42 is the answer,  then the question has to be -42.
-        return -42;
+        // return -42;
+        return app.exit(e);
     }
 
-    auto *script = argv[1];          // TODO: cliparam
-    const auto *filename = "tq.csv"; // TODO: cliparam
-    auto thread_count = 4;           // TODO: cliparam
-    auto in_queue_size = 4;          // TODO: cliparam
-    auto out_queue_size = 4;         // TODO: cliparam
-    auto chunk_size = 1e6;           // TODO: cliparam
+    if (chunk_size <= 0) {
+        chunk_size = 1e6;
+    }
+    if (thread_count <= 0) {
+        thread_count = 1;
+    }
+    if (in_queue_size <= 0) {
+        in_queue_size = thread_count;
+    }
+    if (out_queue_size <= 0) {
+        out_queue_size = thread_count;
+    }
 
     engine::engine e(thread_count, in_queue_size, out_queue_size);
     parser::run(script, e);
 
-    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    auto file = std::ifstream(filename, std::ios::in | std::ios::binary);
+
     if (!e.has_header()) {
         std::string header_raw;
         std::getline(file, header_raw);

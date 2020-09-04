@@ -39,7 +39,7 @@ void worker(threading::queue<models::raw_chunk> &queue, const engine &e,
         csv::parse_body(std::move(chunk.value()), [&](models::row &row) {
             if (e.apply(row, tmp_eval_stack)) {
                 models::append_to_string(print_buffer, row);
-	    }
+            }
         });
         // fmt::print(stderr, "pushing to print_queue chunk_id: {}\n",
         // chunk->id);

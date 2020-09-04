@@ -52,8 +52,7 @@ template <typename Rule> struct action {};
 template <> struct action<header_value> {
     template <typename Input>
     inline static void apply(const Input &in, models::header_row &header) {
-        header.emplace_back(
-            models::col_header{.name = in.string(), .type = models::string_t});
+        header.emplace_back(models::col_header{.name = in.string()});
     }
 };
 
