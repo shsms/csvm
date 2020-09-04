@@ -53,6 +53,9 @@ tidy: format
 	clang-tidy --checks=readability-*,performance-*,cppcoreguidelines-*,bugprone-*,misc-* $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
 	make format
 
+check:
+	clang-check -analyze $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
+
 tidy-fix: format
 	clang-tidy --checks=readability-*,performance-*,cppcoreguidelines-*,bugprone-*,misc-* --fix $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
 	make format

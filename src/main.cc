@@ -41,9 +41,9 @@ int main(int argc, char *argv[]) {
     auto *script = argv[1];          // TODO: cliparam
     const auto *filename = "tq.csv"; // TODO: cliparam
     auto thread_count = 4;           // TODO: cliparam
-    auto in_queue_size = 4;            // TODO: cliparam
-    auto out_queue_size = 4;            // TODO: cliparam
-    auto chunk_size = 5e4;           // TODO: cliparam
+    auto in_queue_size = 4;          // TODO: cliparam
+    auto out_queue_size = 4;         // TODO: cliparam
+    auto chunk_size = 1e6;           // TODO: cliparam
 
     engine::engine e(thread_count, in_queue_size, out_queue_size);
     parser::run(script, e);

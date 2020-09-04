@@ -20,7 +20,7 @@ using value = std::variant<std::string, double, bool>;
 //     bool bool_v;
 // };
 
-using row = std::pair<std::vector<value>, bool>;
+using row = std::vector<value>;
 
 struct raw_chunk {
     int id;
@@ -28,7 +28,7 @@ struct raw_chunk {
 };
 
 struct bin_chunk {
-    int id;    
+    int id;
     std::vector<row> data;
     int length;
 };
@@ -77,6 +77,19 @@ inline void to_str(value &a) {
     a = std::move(str);
 }
 
+inline void append_to_string(std::string &ret, const row &row) {
+    static const std::string comma_str = ",";
+    static const std::string newline = "\n";
+    for (auto ii = 0; ii < row.size(); ii++) {
+        if (ii == 0) {
+            ret += std::get<std::string>(row[ii]);
+        } else {
+            ret += comma_str + std::get<std::string>(row[ii]);
+        }
+    }
+    ret += newline;
+}
+// void append_to_string(const models::row &, std::string &);
 } // namespace models
 
 #endif

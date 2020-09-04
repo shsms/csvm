@@ -7,40 +7,44 @@
 
 namespace engine {
 
-models::raw_chunk to_raw_chunk(models::bin_chunk &bin_chunk) {
-    static const std::string comma_str = ",";
-    static const std::string newline = "\n";
-    std::string print_buffer;
-    for (int ii = 0; ii < bin_chunk.length; ii++) {
-	if (!bin_chunk.data[ii].second) {
-	    continue;
-	}
-	const auto &row = bin_chunk.data[ii];
-        for (auto jj = 0; jj < row.first.size(); jj++) {
-            if (jj == 0) {
-                print_buffer += std::get<std::string>(row.first[jj]);
-            } else {
-                print_buffer += comma_str + std::get<std::string>(row.first[jj]);
-            }
-        }
-        print_buffer += newline;
-    }
+// models::raw_chunk to_raw_chunk(models::bin_chunk &bin_chunk) {
+//     static const std::string comma_str = ",";
+//     static const std::string newline = "\n";
+//     std::string print_buffer;
+//     for (int ii = 0; ii < bin_chunk.length; ii++) {
+// 	if (!bin_chunk.data[ii].second) {
+// 	    continue;
+// 	}
+// 	const auto &row = bin_chunk.data[ii];
+//         for (auto jj = 0; jj < row.first.size(); jj++) {
+//             if (jj == 0) {
+//                 print_buffer += std::get<std::string>(row.first[jj]);
+//             } else {
+//                 print_buffer += comma_str +
+//                 std::get<std::string>(row.first[jj]);
+//             }
+//         }
+//         print_buffer += newline;
+//     }
 
-    return {bin_chunk.id, std::move(print_buffer)};
-}
+//     return {bin_chunk.id, std::move(print_buffer)};
+// }
 
 void worker(threading::queue<models::raw_chunk> &queue, const engine &e,
             threading::queue<models::raw_chunk> &print_queue) {
     std::stack<models::value> tmp_eval_stack;
-    models::bin_chunk parsed;
-    
+    std::string print_buffer;
     auto chunk = queue.dequeue();
     while (chunk.has_value()) {
-        csv::parse_body(std::move(chunk.value()), parsed);
-        for (int ii = 0;  ii < parsed.length; ii++) {
-            parsed.data[ii].second = e.apply(parsed.data[ii], tmp_eval_stack);
-        }
-        print_queue.enqueue(to_raw_chunk(parsed));
+        csv::parse_body(std::move(chunk.value()), [&](models::row &row) {
+            if (e.apply(row, tmp_eval_stack)) {
+                models::append_to_string(print_buffer, row);
+	    }
+        });
+        // fmt::print(stderr, "pushing to print_queue chunk_id: {}\n",
+        // chunk->id);
+        print_queue.enqueue({chunk->id, print_buffer});
+        print_buffer.clear();
         chunk = queue.dequeue();
     }
 }
