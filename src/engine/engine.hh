@@ -15,7 +15,9 @@ namespace engine {
 // connect to other subsequent tblocks.  Testing only single threaded mode right
 // now.
 using tblock = std::vector<std::shared_ptr<stmt>>;
-
+using raw_queue = threading::queue<models::raw_chunk>;
+using bin_queue = threading::queue<models::bin_chunk>;
+using block_workers = std::vector<std::thread>;
 class engine {
     std::shared_ptr<stmt> curr_stmt;
     tblock curr_block;
@@ -24,10 +26,12 @@ class engine {
 
     int thread_count{}, in_queue_size{}, out_queue_size;
 
-    threading::queue<models::raw_chunk> input_queue;
-    threading::queue<models::raw_chunk> print_queue;
-    std::vector<std::thread> worker_threads;
+    raw_queue input_queue;
+    raw_queue print_queue;
+    std::vector<bin_queue> block_queues;
+    std::vector<block_workers> worker_threads;
     std::thread print_thread;
+    stmt::exec_order prev_exec_order{stmt::curr_block};
 
   public:
     engine(int trd_cnt, int in_q_sz, int out_q_sz)
@@ -49,11 +53,14 @@ class engine {
     void cleanup();
     inline auto &get_input_queue() { return input_queue; }
 
-    bool apply(models::row &row, std::stack<models::value> &eval_stack) const;
     std::string string();
     bool has_header() const;
     void set_header(models::header_row &&h);
 };
+
+bool apply(const tblock &, models::row &, std::stack<models::value> &);
+bool apply(const tblock &, models::bin_chunk &, std::stack<models::value> &);
+
 } // namespace engine
 
 #endif

@@ -4,11 +4,11 @@
 #include <any>
 #include <fmt/format.h>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <typeindex>
 #include <variant>
 #include <vector>
-
 namespace models {
 
 using value = std::variant<std::string, double, bool>;

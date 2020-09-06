@@ -28,12 +28,25 @@ class stmt {
         throw std::runtime_error("stmt::add_oper not implemented");
     }
 
-    virtual void finalize() {}
+    enum exec_order {
+        curr_block,
+        new_block,
+        sep_block // run in a separate block - sort, stats, etc.
+    };
+    virtual exec_order finalize() { return curr_block; }
 
     virtual std::string string() = 0;
 
-    virtual bool apply(models::row &,
-                       std::stack<models::value> &eval_stack) const = 0;
+    virtual bool apply(models::row &, std::stack<models::value> &) {
+        throw std::runtime_error("stmt::apply<row> not implemented");
+    }
+    virtual bool apply(models::bin_chunk &chunk,
+                       std::stack<models::value> &eval_stack) {
+        for (auto &row : chunk.data) {
+            apply(row, eval_stack);
+        }
+        return true;
+    }
 };
 
 } // namespace engine

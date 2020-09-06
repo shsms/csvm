@@ -2,6 +2,7 @@
 #include "../engine/colsstmt.hh"
 #include "../engine/engine.hh"
 #include "../engine/selectstmt.hh"
+#include "../engine/sortstmt.hh"
 #include "../engine/to_num_stmt.hh"
 #include "../engine/to_str_stmt.hh"
 #include <fmt/format.h>
@@ -156,8 +157,35 @@ template <> struct action<op_bool> {
     }
 };
 
+// sort
+struct op_reverse : one<'r'> {};
+struct op_numeric : one<'n'> {};
+struct op_sort : sor<op_reverse, op_numeric> {};
+struct sortitem : seq<ident, opt<seq<one<':'>, op_sort, opt<op_sort>>>> {};
+struct sort : string<'s', 'o', 'r', 't'> {};
+struct sortstmt : seq<sort, oparan, list_must<sortitem, comma, sp>, cparan> {};
+
+template <> struct control<sortstmt> : normal<sortstmt> {
+    template <typename Input>
+    static void start(const Input & /*unused*/, engine::engine &e) {
+        e.new_stmt<engine::sortstmt>();
+    }
+    template <typename Input>
+    static void success(const Input & /*unused*/, engine::engine &e) {
+        e.finish_stmt();
+    }
+};
+
+template <> struct action<op_sort> {
+    template <typename Input>
+    static void apply(const Input &in, engine::engine &e) {
+        e.add_oper(in.string());
+    }
+};
+
 // generic
-struct anystmt : sor<colsstmt, selectstmt, to_num_stmt, to_str_stmt> {};
+struct anystmt : sor<colsstmt, selectstmt, to_num_stmt, to_str_stmt, sortstmt> {
+};
 struct block : seq<opt<sp>, list<anystmt, semi, sp>, opt<semi>> {};
 struct thread_block : seq<obrace, sps, block, sps, cbrace, sps> {};
 struct pgm : must<sor<block, star<thread_block>>, eof> {};

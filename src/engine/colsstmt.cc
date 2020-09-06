@@ -35,7 +35,7 @@ void colsstmt::set_header(models::header_row &h) {
     models::header_row out_headers;
     for (auto &col : columns) {
         bool found = false;
-        for (auto ii = 0; ii < h.size(); ii++) {
+        for (auto ii = 0; ii < h.size(); ++ii) {
             if (col == h[ii].name) {
                 col_pos.push_back(ii);
                 out_headers.push_back(h[ii]);
@@ -52,7 +52,7 @@ void colsstmt::set_header(models::header_row &h) {
 
 void colsstmt::set_exclude_header(models::header_row &h) {
     models::header_row out_headers;
-    for (auto ii = 0; ii < h.size(); ii++) {
+    for (auto ii = 0; ii < h.size(); ++ii) {
         bool found = false;
         for (auto &col : columns) {
             if (col == h[ii].name) {
@@ -69,7 +69,7 @@ void colsstmt::set_exclude_header(models::header_row &h) {
 }
 
 bool colsstmt::apply(models::row &row,
-                     std::stack<models::value> & /*eval_stack*/) const {
+                     std::stack<models::value> & /*eval_stack*/) {
     models::row ret;
     for (auto pos : col_pos) {
         ret.push_back(row[pos]);

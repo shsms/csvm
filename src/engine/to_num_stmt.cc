@@ -36,7 +36,7 @@ void to_num_stmt::set_header(models::header_row &h) {
 }
 
 bool to_num_stmt::apply(models::row &row,
-                        std::stack<models::value> & /*eval_stack*/) const {
+                        std::stack<models::value> & /*eval_stack*/) {
     for (auto pos : col_pos) {
         models::to_num(row[pos]);
     }

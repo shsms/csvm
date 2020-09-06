@@ -13,7 +13,7 @@ namespace threading {
 using namespace std::chrono_literals;
 
 template <typename T> class queue {
-    int limit = 1;
+    int limit = 10;
     std::queue<T> q;
     std::atomic<std::size_t> q_size{0};
     std::atomic<bool> eof{false};
@@ -22,6 +22,14 @@ template <typename T> class queue {
     spin_lock spin_mu;
 
   public:
+    queue() {}
+    // atomics don't have move constructors,  so had to fake it.
+    queue(queue &&other)
+        : limit(other.limit), q(std::move(other.q)),
+          q_size(other.q_size.load()), eof(other.eof.load()) {
+        q_size = 0;
+        eof = false;
+    }
     void set_limit(int lim) { limit = lim; }
 
     auto enqueue(T &&item) {

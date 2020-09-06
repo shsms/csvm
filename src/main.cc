@@ -78,8 +78,10 @@ int main(int argc, char *argv[]) {
 
     engine::engine e(thread_count, in_queue_size, out_queue_size);
     parser::run(script, e);
-
     auto file = std::ifstream(filename, std::ios::in | std::ios::binary);
+
+    // std::cerr << e.string();
+    e.start();
 
     if (!e.has_header()) {
         std::string header_raw;
@@ -90,8 +92,6 @@ int main(int argc, char *argv[]) {
         }
         e.set_header(csv::parse_header(std::move(header_raw)));
     }
-
-    e.start();
 
     auto &input_queue = e.get_input_queue();
 

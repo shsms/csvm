@@ -82,11 +82,12 @@ void expr::add_oper(const std::string &oper) {
     }
 }
 
-void expr::finalize() {
+stmt::exec_order expr::finalize() {
     while (!stack.empty()) {
         steps.emplace_back(stack.back());
         stack.pop_back();
     }
+    return curr_block;
 }
 std::string expr::string() {
     std::string ret;
@@ -107,8 +108,7 @@ void expr::set_header(models::header_row &h) {
     }
 }
 
-bool expr::apply(models::row &row,
-                 std::stack<models::value> &eval_stack) const {
+bool expr::apply(models::row &row, std::stack<models::value> &eval_stack) {
     for (const auto &step : steps) {
         step->apply(row, eval_stack);
     }

@@ -20,11 +20,11 @@ class expr : public stmt {
     void add_num(const std::string & /*unused*/) override;
     void add_bang() override;
     void add_oper(const std::string & /*unused*/) override;
-    void finalize() override;
+    exec_order finalize() override;
     std::string string() override;
     void set_header(models::header_row &h) override;
     bool apply(models::row & /*unused*/,
-               std::stack<models::value> &eval_stack) const override;
+               std::stack<models::value> &eval_stack) override;
 };
 
 } // namespace engine::expr
