@@ -8,9 +8,14 @@
 #include <optional>
 #include <queue>
 #include <string>
-
+#include "models/models.hh"
 namespace threading {
 using namespace std::chrono_literals;
+
+template <typename T> class queue;
+
+using raw_queue = queue<models::raw_chunk>;
+using bin_queue = queue<models::bin_chunk>;
 
 template <typename T> class queue {
     int limit = 10;

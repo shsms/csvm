@@ -4,6 +4,8 @@
 #include "../models/models.hh"
 #include <stack>
 #include <string>
+#include "../queue.hh"
+
 namespace engine {
 
 class stmt {
@@ -46,6 +48,9 @@ class stmt {
             apply(row, eval_stack);
         }
         return true;
+    }
+    virtual bool run_worker(threading::bin_queue &in_queue, std::function<void(models::bin_chunk&)>) {
+	return false;
     }
 };
 

@@ -1,10 +1,11 @@
 #include "sortstmt.hh"
+#include "mergestmt.hh"
 #include <iostream>
 
 namespace engine {
 
 void sortstmt::add_ident(const std::string &col) {
-    columns.emplace_back(colspec{false, false, 0, col});
+    columns.emplace_back(sortspec{false, false, 0, col});
     ++curr_pos;
 }
 
@@ -55,4 +56,36 @@ bool sortstmt::apply(models::bin_chunk &chunk,
     return true; // don't want print stuff to pick this up.
 }
 
+std::atomic<bool> sortstmt::merge_thread_created{false};
+std::thread sortstmt::merge_thread{};
+threading::queue<models::bin_chunk> sortstmt::to_merge{};
+
+
+bool sortstmt::run_worker(threading::bin_queue &in_queue, std::function<void(models::bin_chunk&)> forwarder) {
+    bool f = false;
+    auto owner = merge_thread_created.compare_exchange_strong(f, true);
+    if (owner) {
+	merge_thread = std::thread([this, forwarder](){
+	    mergestmt mstmt(this->columns);
+	    mstmt.run_worker(to_merge, forwarder);
+	});
+    }
+    
+    std::stack<models::value> tmp_eval_stack;
+    auto in_chunk = in_queue.dequeue();
+    while (in_chunk.has_value()) {
+        apply(in_chunk.value(), tmp_eval_stack);
+	to_merge.enqueue(std::move(in_chunk.value()));
+        in_chunk = in_queue.dequeue();
+    }
+    
+    if (owner) {
+	to_merge.set_eof();
+    	if (merge_thread.joinable()) {
+	    merge_thread.join();
+	}
+    }
+    
+    return true;
+}
 } // namespace engine
