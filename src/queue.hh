@@ -2,13 +2,13 @@
 #define CSVM_QUEUE_HH
 
 #include "locks.hh"
+#include "models/models.hh"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <optional>
 #include <queue>
 #include <string>
-#include "models/models.hh"
 namespace threading {
 using namespace std::chrono_literals;
 
@@ -29,7 +29,7 @@ template <typename T> class queue {
   public:
     queue() {}
     // atomics don't have move constructors,  so had to fake it.
-    queue(queue &&other)
+    queue(queue &&other) noexcept
         : limit(other.limit), q(std::move(other.q)),
           q_size(other.q_size.load()), eof(other.eof.load()) {
         q_size = 0;

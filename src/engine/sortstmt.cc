@@ -1,8 +1,11 @@
 #include "sortstmt.hh"
 #include "mergestmt.hh"
+#include <chrono>
 #include <iostream>
 
 namespace engine {
+
+using namespace std::chrono_literals;
 
 void sortstmt::add_ident(const std::string &col) {
     columns.emplace_back(sortspec{false, false, 0, col});
@@ -34,13 +37,12 @@ void sortstmt::set_header(models::header_row &h) {
             throw std::runtime_error("column not found in header:" + col.name);
         }
     }
-    return;
 }
 
 std::string sortstmt::string() { return ""; }
 
 bool sortstmt::apply(models::bin_chunk &chunk,
-                     std::stack<models::value> &eval_stack) {
+                     std::stack<models::value> & /*eval_stack*/) {
     std::stable_sort(chunk.data.begin(), chunk.data.end(),
                      [this](const models::row &a, const models::row &b) {
                          for (auto &col : this->columns) {
@@ -59,33 +61,38 @@ bool sortstmt::apply(models::bin_chunk &chunk,
 std::atomic<bool> sortstmt::merge_thread_created{false};
 std::thread sortstmt::merge_thread{};
 threading::queue<models::bin_chunk> sortstmt::to_merge{};
+threading::barrier sortstmt::barrier;
 
+void sortstmt::set_thread_count(int c) { barrier.expect(c); }
 
-bool sortstmt::run_worker(threading::bin_queue &in_queue, std::function<void(models::bin_chunk&)> forwarder) {
+bool sortstmt::run_worker(
+    threading::bin_queue &in_queue,
+    const std::function<void(models::bin_chunk &)> &forwarder) {
     bool f = false;
     auto owner = merge_thread_created.compare_exchange_strong(f, true);
     if (owner) {
-	merge_thread = std::thread([this, forwarder](){
-	    mergestmt mstmt(this->columns);
-	    mstmt.run_worker(to_merge, forwarder);
-	});
+        merge_thread = std::thread([this, forwarder]() {
+            mergestmt mstmt(this->columns);
+            mstmt.run_worker(to_merge, forwarder);
+        });
     }
-    
+
     std::stack<models::value> tmp_eval_stack;
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         apply(in_chunk.value(), tmp_eval_stack);
-	to_merge.enqueue(std::move(in_chunk.value()));
+        to_merge.enqueue(std::move(in_chunk.value()));
         in_chunk = in_queue.dequeue();
     }
-    
+    barrier.arrive();
     if (owner) {
-	to_merge.set_eof();
-    	if (merge_thread.joinable()) {
-	    merge_thread.join();
-	}
+        barrier.wait();
+        to_merge.set_eof();
+        if (merge_thread.joinable()) {
+            merge_thread.join();
+        }
     }
-    
+
     return true;
 }
 } // namespace engine

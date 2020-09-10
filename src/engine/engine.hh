@@ -22,7 +22,7 @@ struct tblock {
 
 using thread_group = std::vector<std::thread>;
 class engine {
-    std::shared_ptr<stmt> curr_stmt;  // TODO: is unique_ptr possible here?
+    std::shared_ptr<stmt> curr_stmt; // TODO: is unique_ptr possible here?
     tblock curr_block;
     std::vector<tblock> tblocks;
     bool header_set = false;
@@ -51,6 +51,7 @@ class engine {
     void add_num(const std::string &);
     void add_bang();
     void add_oper(const std::string &);
+    void finalize();
 
     void start();
     void cleanup();

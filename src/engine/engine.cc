@@ -67,12 +67,12 @@ void entry_worker(threading::raw_queue &in_queue, const tblock &block,
 
 void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
                          threading::bin_queue &out_queue) {
-    auto forwarder = [&out_queue](models::bin_chunk&c){
-	out_queue.enqueue(std::move(c));
+    auto forwarder = [&out_queue](models::bin_chunk &c) {
+        out_queue.enqueue(std::move(c));
     };
     if (block.exec_order == stmt::sep_block &&
-	block.stmts[0]->run_worker(in_queue, forwarder)) {
-	return;
+        block.stmts[0]->run_worker(in_queue, forwarder)) {
+        return;
     }
     std::stack<models::value> tmp_eval_stack;
     auto in_chunk = in_queue.dequeue();
@@ -87,25 +87,25 @@ void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
 void exit_worker(threading::bin_queue &in_queue, const tblock &block,
                  threading::raw_queue &print_queue) {
     std::string print_buffer;
-    
-    auto forwarder = [&print_queue, &print_buffer](models::bin_chunk&c){
-	for (const auto &row : c.data) {
-	    models::append_to_string(print_buffer, row);
-	}
-	print_queue.enqueue({c.id, std::move(print_buffer)});
-	print_buffer.clear();
+
+    auto forwarder = [&print_queue, &print_buffer](models::bin_chunk &c) {
+        for (const auto &row : c.data) {
+            models::append_to_string(print_buffer, row);
+        }
+        print_queue.enqueue({c.id, std::move(print_buffer)});
+        print_buffer.clear();
     };
-    
+
     if (block.exec_order == stmt::sep_block &&
-	block.stmts[0]->run_worker(in_queue, forwarder)) {
-	return;
+        block.stmts[0]->run_worker(in_queue, forwarder)) {
+        return;
     }
-    
+
     std::stack<models::value> tmp_eval_stack;
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         if (apply(block, in_chunk.value(), tmp_eval_stack)) {
-	    forwarder(in_chunk.value());
+            forwarder(in_chunk.value());
         }
         in_chunk = in_queue.dequeue();
     }
@@ -137,7 +137,7 @@ void print_worker(threading::queue<models::raw_chunk> &queue) {
 void engine::finish_stmt() {
     auto exec_order = curr_stmt->finalize();
     if (exec_order == stmt::sep_block || prev_exec_order == stmt::sep_block) {
-	curr_block.exec_order = exec_order;
+        curr_block.exec_order = exec_order;
         tblocks.emplace_back(std::move(curr_block));
         curr_block.stmts.clear();
         curr_block.stmts.emplace_back(curr_stmt);
@@ -216,9 +216,17 @@ void engine::set_header(models::header_row &&h) {
 
 bool engine::has_header() const { return header_set; }
 
+void engine::finalize() {
+    tblocks.emplace_back(curr_block);
+
+    for (auto &block : tblocks) {
+        for (auto &s : block.stmts) {
+            s->set_thread_count(thread_count);
+        }
+    }
+}
+
 void engine::start() {
-    tblocks.emplace_back(
-        curr_block); // TODO: move to new engine::finalize method.
     input_queue.set_limit(in_queue_size);
     print_queue.set_limit(out_queue_size);
 
@@ -264,10 +272,11 @@ void engine::cleanup() {
         if (ii > 0) {
             block_queues[ii - 1].set_eof();
         }
-        for (auto &t : thread_groups[ii])
+        for (auto &t : thread_groups[ii]) {
             if (t.joinable()) {
                 t.join();
             }
+        }
     }
 
     print_queue.set_eof();

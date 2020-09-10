@@ -1,5 +1,5 @@
 #ifndef CSVM_CSV_HH
-#define CSVM_CSV_HM
+#define CSVM_CSV_HH
 
 #include "../engine/engine.hh"
 #include "../models/models.hh"
