@@ -17,13 +17,22 @@ struct sortspec {
     std::string name;
 };
 
+struct merge_row {
+    int chunk_id;
+    int chunk_pos;
+    models::row m_row;
+};
+
+using merge_chunk = std::vector<merge_row>;
+
 class sortstmt : public stmt {
   private:
     int curr_pos{};
     std::vector<sortspec> columns;
+
     static std::atomic<bool> merge_thread_created;
     static std::thread merge_thread;
-    static threading::queue<models::bin_chunk> to_merge;
+    static threading::queue<merge_chunk> to_merge;
     static threading::barrier barrier;
 
   public:

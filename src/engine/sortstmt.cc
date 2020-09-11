@@ -60,7 +60,7 @@ bool sortstmt::apply(models::bin_chunk &chunk,
 
 std::atomic<bool> sortstmt::merge_thread_created{false};
 std::thread sortstmt::merge_thread{};
-threading::queue<models::bin_chunk> sortstmt::to_merge{};
+threading::queue<merge_chunk> sortstmt::to_merge{};
 threading::barrier sortstmt::barrier;
 
 void sortstmt::set_thread_count(int c) { barrier.expect(c); }
@@ -73,7 +73,7 @@ bool sortstmt::run_worker(
     if (owner) {
         merge_thread = std::thread([this, forwarder]() {
             mergestmt mstmt(this->columns);
-            mstmt.run_worker(to_merge, forwarder);
+            mstmt.run_merge_worker(to_merge, forwarder);
         });
     }
 
@@ -81,7 +81,11 @@ bool sortstmt::run_worker(
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         apply(in_chunk.value(), tmp_eval_stack);
-        to_merge.enqueue(std::move(in_chunk.value()));
+        merge_chunk new_chunk{};
+        for (auto &r : in_chunk->data) {
+            new_chunk.emplace_back(merge_row{in_chunk->id, 0, std::move(r)});
+        }
+        to_merge.enqueue(std::move(new_chunk));
         in_chunk = in_queue.dequeue();
     }
     barrier.arrive();

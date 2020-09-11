@@ -42,20 +42,16 @@ bool mergestmt::apply(models::bin_chunk & /*chunk*/,
     return false; // don't want print stuff to pick this up.
 }
 
-bool mergestmt::run_worker(
-    threading::bin_queue &in_queue,
+bool mergestmt::run_merge_worker(
+    threading::queue<merge_chunk> &in_queue,
     const std::function<void(models::bin_chunk &)> &forwarder) {
-    std::pmr::monotonic_buffer_resource mem{};
 
     bool reverse_compare = true;
-    struct row {
-        int chunk_id;
-        int chunk_pos;
-        models::row m_row;
-    };
 
-    const auto comp_func = [&](const row &a, const row &b) {
+    const auto comp_func = [&](const merge_row &a, const merge_row &b) {
         for (auto &col : this->columns) {
+            // std::cerr << "v1: " << std::get<double>(a.m_row[col.pos])  <<
+            // 	"v2: " << std::get<double>(b.m_row[col.pos]) << "\n";
             if (a.m_row[col.pos] > b.m_row[col.pos]) {
                 return reverse_compare != col.descending;
             }
@@ -66,16 +62,11 @@ bool mergestmt::run_worker(
         return reverse_compare != (a.chunk_id < b.chunk_id);
     };
 
-    using merge_chunk = std::pmr::vector<row>;
-    std::pmr::vector<merge_chunk> chunks{&mem};
+    std::vector<merge_chunk> chunks{};
     auto in_chunk = in_queue.dequeue();
 
     while (in_chunk.has_value()) {
-        merge_chunk new_chunk{&mem};
-        for (auto &r : in_chunk->data) {
-            new_chunk.emplace_back(row{in_chunk->id, 0, std::move(r)});
-        }
-        chunks.emplace_back(std::move(new_chunk));
+        chunks.emplace_back(std::move(in_chunk.value()));
         in_chunk = in_queue.dequeue();
     }
     std::sort(chunks.begin(), chunks.end(),
@@ -86,8 +77,8 @@ bool mergestmt::run_worker(
                   return a[0].chunk_id < b[0].chunk_id;
               });
 
-    std::priority_queue<row, std::pmr::vector<row>, decltype(comp_func)>
-        pri_queue(comp_func, &mem);
+    std::priority_queue<merge_row, std::vector<merge_row>, decltype(comp_func)>
+        pri_queue(comp_func);
 
     for (int ii = 0; ii < chunks.size(); ii++) {
         if (!chunks[ii].empty()) {

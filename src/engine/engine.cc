@@ -137,12 +137,13 @@ void print_worker(threading::queue<models::raw_chunk> &queue) {
 void engine::finish_stmt() {
     auto exec_order = curr_stmt->finalize();
     if (exec_order == stmt::sep_block || prev_exec_order == stmt::sep_block) {
-        curr_block.exec_order = exec_order;
         tblocks.emplace_back(std::move(curr_block));
         curr_block.stmts.clear();
+        curr_block.exec_order = exec_order;
         curr_block.stmts.emplace_back(curr_stmt);
         block_queues.emplace_back(threading::bin_queue{});
     } else if (exec_order == stmt::curr_block) {
+        curr_block.exec_order = exec_order;
         curr_block.stmts.emplace_back(curr_stmt);
     }
     prev_exec_order = exec_order;
@@ -186,10 +187,15 @@ bool apply(const tblock &block, models::bin_chunk &chunk,
 
 std::string engine::string() {
     std::string ret;
-    int ctr = 1;
+    int bctr = 0, sctr = 0;
     for (auto &block : tblocks) {
+        ++bctr;
+        sctr = 0;
+        ret += "\nblock: " + std::to_string(bctr) +
+               ". exec_order: " + std::to_string(block.exec_order) + "\n";
         for (auto &s : block.stmts) {
-            ret += std::to_string(ctr++) + ". " + s->string();
+            ret += std::to_string(bctr) + "." + std::to_string(++sctr) + ". " +
+                   s->string();
         }
     }
     return ret;

@@ -80,8 +80,8 @@ int main(int argc, char *argv[]) {
     parser::run(script, e);
     auto file = std::ifstream(filename, std::ios::in | std::ios::binary);
 
-    // std::cerr << e.string();
     e.finalize();
+    // std::cerr << e.string();
     if (!e.has_header()) {
         std::string header_raw;
         std::getline(file, header_raw);
