@@ -49,10 +49,7 @@ class stmt {
 
     virtual bool apply(models::bin_chunk &chunk,
                        std::stack<models::value> &eval_stack) {
-        for (auto &row : chunk.data) {
-            apply(row, eval_stack);
-        }
-        return true;
+        throw std::runtime_error("stmt::apply<chunk> not implemented");
     }
 
     virtual bool

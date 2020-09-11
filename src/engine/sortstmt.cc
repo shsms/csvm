@@ -39,7 +39,17 @@ void sortstmt::set_header(models::header_row &h) {
     }
 }
 
-std::string sortstmt::string() { return ""; }
+std::string sortstmt::string() {
+    std::string ret = "sort:\n";
+    for (const auto &col : columns) {
+        ret += "\t" + std::to_string(col.pos) + " : " + col.name;
+        if (col.descending) {
+            ret += "(descending)";
+        }
+        ret += "\n";
+    }
+    return ret;
+}
 
 bool sortstmt::apply(models::bin_chunk &chunk,
                      std::stack<models::value> & /*eval_stack*/) {
@@ -55,13 +65,8 @@ bool sortstmt::apply(models::bin_chunk &chunk,
                          }
                          return false;
                      });
-    return true; // don't want print stuff to pick this up.
+    return true;
 }
-
-std::atomic<bool> sortstmt::merge_thread_created{false};
-std::thread sortstmt::merge_thread{};
-threading::queue<merge_chunk> sortstmt::to_merge{};
-threading::barrier sortstmt::barrier;
 
 void sortstmt::set_thread_count(int c) { barrier.expect(c); }
 
@@ -83,7 +88,7 @@ bool sortstmt::run_worker(
         apply(in_chunk.value(), tmp_eval_stack);
         merge_chunk new_chunk{};
         for (auto &r : in_chunk->data) {
-            new_chunk.emplace_back(merge_row{in_chunk->id, 0, std::move(r)});
+            new_chunk.emplace_back(merge_row{in_chunk->id, 0, 0, std::move(r)});
         }
         to_merge.enqueue(std::move(new_chunk));
         in_chunk = in_queue.dequeue();

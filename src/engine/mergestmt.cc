@@ -50,8 +50,6 @@ bool mergestmt::run_merge_worker(
 
     const auto comp_func = [&](const merge_row &a, const merge_row &b) {
         for (auto &col : this->columns) {
-            // std::cerr << "v1: " << std::get<double>(a.m_row[col.pos])  <<
-            // 	"v2: " << std::get<double>(b.m_row[col.pos]) << "\n";
             if (a.m_row[col.pos] > b.m_row[col.pos]) {
                 return reverse_compare != col.descending;
             }
@@ -59,7 +57,7 @@ bool mergestmt::run_merge_worker(
                 return reverse_compare != (!col.descending);
             }
         }
-        return reverse_compare != (a.chunk_id < b.chunk_id);
+        return reverse_compare != (a.orig_chunk_id < b.orig_chunk_id);
     };
 
     std::vector<merge_chunk> chunks{};
@@ -69,19 +67,13 @@ bool mergestmt::run_merge_worker(
         chunks.emplace_back(std::move(in_chunk.value()));
         in_chunk = in_queue.dequeue();
     }
-    std::sort(chunks.begin(), chunks.end(),
-              [](const merge_chunk &a, const merge_chunk &b) {
-                  if (a.empty() || b.empty()) {
-                      return false;
-                  }
-                  return a[0].chunk_id < b[0].chunk_id;
-              });
 
     std::priority_queue<merge_row, std::vector<merge_row>, decltype(comp_func)>
         pri_queue(comp_func);
 
     for (int ii = 0; ii < chunks.size(); ii++) {
         if (!chunks[ii].empty()) {
+            chunks[ii][0].curr_chunk_id = ii;
             pri_queue.push(std::move(chunks[ii][0]));
         }
     }
@@ -100,9 +92,13 @@ bool mergestmt::run_merge_worker(
         out_chunk.data.emplace_back(std::move(next.m_row));
         pri_queue.pop();
         ++next.chunk_pos;
-        if (next.chunk_pos < chunks[next.chunk_id].size()) {
-            chunks[next.chunk_id][next.chunk_pos].chunk_pos = next.chunk_pos;
-            pri_queue.push(std::move(chunks[next.chunk_id][next.chunk_pos]));
+        if (next.chunk_pos < chunks[next.curr_chunk_id].size()) {
+            chunks[next.curr_chunk_id][next.chunk_pos].curr_chunk_id =
+                next.curr_chunk_id;
+            chunks[next.curr_chunk_id][next.chunk_pos].chunk_pos =
+                next.chunk_pos;
+            pri_queue.push(
+                std::move(chunks[next.curr_chunk_id][next.chunk_pos]));
         }
     }
     if (!out_chunk.data.empty()) {

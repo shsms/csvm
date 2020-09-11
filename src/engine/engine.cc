@@ -42,6 +42,7 @@ void entry_worker(threading::raw_queue &in_queue, const tblock &block,
 
 void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
                          threading::bin_queue &out_queue) {
+    // TODO: make forwarder move-only
     auto forwarder = [&out_queue](models::bin_chunk &c) {
         out_queue.enqueue(std::move(c));
     };
@@ -53,12 +54,14 @@ void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
     models::bin_chunk out_chunk;
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
+        out_chunk.id = in_chunk->id;
         for (auto &row : in_chunk.value().data) {
             if (apply(block, row, tmp_eval_stack)) {
                 out_chunk.data.emplace_back(row);
             }
         }
-        forwarder(out_chunk);
+        out_queue.enqueue(std::move(out_chunk));
+        out_chunk.data.clear();
         in_chunk = in_queue.dequeue();
     }
 }
@@ -234,14 +237,11 @@ void engine::start() {
         }
     } else {
         thread_groups.resize(tblocks.size());
-        //	std::cerr << "tblocks.size() =" << worker_threads.size() <<
-        //"\n";
         for (int ii = 0; ii < thread_count; ++ii) {
             thread_groups.front().emplace_back(std::thread([&]() {
                 entry_worker(input_queue, tblocks.front(), block_queues[0]);
             }));
             for (auto jj = 0; jj < tblocks.size() - 2; ++jj) {
-                //		std::cerr << "jj = " << jj << "\n";
                 thread_groups[jj + 1].emplace_back(std::thread([&, jj]() {
                     intermediate_worker(block_queues[jj], tblocks[jj + 1],
                                         block_queues.at(jj + 1));

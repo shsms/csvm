@@ -18,7 +18,8 @@ struct sortspec {
 };
 
 struct merge_row {
-    int chunk_id;
+    int orig_chunk_id; // for stable sorting
+    int curr_chunk_id; // to pick next row from, while merging.
     int chunk_pos;
     models::row m_row;
 };
@@ -30,10 +31,10 @@ class sortstmt : public stmt {
     int curr_pos{};
     std::vector<sortspec> columns;
 
-    static std::atomic<bool> merge_thread_created;
-    static std::thread merge_thread;
-    static threading::queue<merge_chunk> to_merge;
-    static threading::barrier barrier;
+    std::atomic<bool> merge_thread_created{false};
+    std::thread merge_thread;
+    threading::queue<merge_chunk> to_merge;
+    threading::barrier barrier;
 
   public:
     void add_ident(const std::string &col) override;

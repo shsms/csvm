@@ -40,6 +40,7 @@ int main(int argc, char *argv[]) {
     int in_queue_size{};
     int out_queue_size{};
     double chunk_size{1e6};
+    bool print_engine{false};
     app.add_option(
            "-f", filename,
            "csv filename, required until next_stdin_chunk is implemented")
@@ -53,7 +54,7 @@ int main(int argc, char *argv[]) {
                    "defaults to number of threads");
     app.add_option("--chunk_size", chunk_size,
                    "size in bytes of each input chunk, defaults to 1e6");
-
+    app.add_flag("--print-engine", print_engine, "display how the engine is built and exit");
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError &e) {
@@ -90,6 +91,11 @@ int main(int argc, char *argv[]) {
             return -42;
         }
         e.set_header(csv::parse_header(std::move(header_raw)));
+    }
+
+    if (print_engine) {
+        std::cerr << e.string();
+        return 0;
     }
 
     e.start();
