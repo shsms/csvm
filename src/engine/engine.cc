@@ -1,34 +1,9 @@
 #include "engine.hh"
 #include "../csv/csv.hh"
 #include "../models/models.hh"
-#include "colsstmt.hh"
-#include "selectstmt.hh"
 #include <iostream>
 
 namespace engine {
-
-// models::raw_chunk to_raw_chunk(models::bin_chunk &bin_chunk) {
-//     static const std::string comma_str = ",";
-//     static const std::string newline = "\n";
-//     std::string print_buffer;
-//     for (int ii = 0; ii < bin_chunk.length; ii++) {
-// 	if (!bin_chunk.data[ii].second) {
-// 	    continue;
-// 	}
-// 	const auto &row = bin_chunk.data[ii];
-//         for (auto jj = 0; jj < row.first.size(); jj++) {
-//             if (jj == 0) {
-//                 print_buffer += std::get<std::string>(row.first[jj]);
-//             } else {
-//                 print_buffer += comma_str +
-//                 std::get<std::string>(row.first[jj]);
-//             }
-//         }
-//         print_buffer += newline;
-//     }
-
-//     return {bin_chunk.id, std::move(print_buffer)};
-// }
 
 void entry_exit_worker(threading::raw_queue &queue, const tblock &block,
                        threading::raw_queue &print_queue) {
@@ -75,11 +50,15 @@ void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
         return;
     }
     std::stack<models::value> tmp_eval_stack;
+    models::bin_chunk out_chunk;
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
-        if (apply(block, in_chunk.value(), tmp_eval_stack)) {
-            forwarder(in_chunk.value());
+        for (auto &row : in_chunk.value().data) {
+            if (apply(block, row, tmp_eval_stack)) {
+                out_chunk.data.emplace_back(row);
+            }
         }
+        forwarder(out_chunk);
         in_chunk = in_queue.dequeue();
     }
 }
@@ -102,11 +81,15 @@ void exit_worker(threading::bin_queue &in_queue, const tblock &block,
     }
 
     std::stack<models::value> tmp_eval_stack;
+    std::string out_buffer;
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
-        if (apply(block, in_chunk.value(), tmp_eval_stack)) {
-            forwarder(in_chunk.value());
+        for (auto &row : in_chunk.value().data) {
+            if (apply(block, row, tmp_eval_stack)) {
+                models::append_to_string(out_buffer, row);
+            }
         }
+        print_queue.enqueue({in_chunk->id, std::move(out_buffer)});
         in_chunk = in_queue.dequeue();
     }
 }
