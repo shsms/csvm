@@ -20,7 +20,7 @@ class spin_lock {
   public:
     void lock() {
         while (flag.test_and_set(std::memory_order_acquire)) {
-            std::this_thread::sleep_for(1000ns);
+            std::this_thread::sleep_for(100us);
         }
     }
 
