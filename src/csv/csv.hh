@@ -3,7 +3,7 @@
 
 #include "../engine/engine.hh"
 #include "../models/models.hh"
-#include "../queue.hh"
+#include "../threading/queue.hh"
 #include <stack>
 #include <string>
 #include <tao/pegtl.hpp>

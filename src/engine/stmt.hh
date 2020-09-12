@@ -2,7 +2,7 @@
 #define CSVM_STMT_H
 
 #include "../models/models.hh"
-#include "../queue.hh"
+#include "../threading/queue.hh"
 #include <stack>
 #include <string>
 

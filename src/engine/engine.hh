@@ -1,7 +1,7 @@
 #ifndef CSVM_ENGINE_H
 #define CSVM_ENGINE_H
 
-#include "../queue.hh"
+#include "../threading/queue.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <memory>

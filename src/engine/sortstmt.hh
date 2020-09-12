@@ -1,7 +1,7 @@
 #ifndef CSVM_SORTSTMT_HH
 #define CSVM_SORTSTMT_HH
 
-#include "../barrier.hh"
+#include "../threading/barrier.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <fmt/format.h>
