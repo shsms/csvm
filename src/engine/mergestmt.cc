@@ -39,7 +39,43 @@ std::string mergestmt::string() { return ""; }
 
 bool mergestmt::apply(models::bin_chunk & /*chunk*/,
                       std::stack<models::value> & /*eval_stack*/) {
-    return false; // don't want print stuff to pick this up.
+    return false;
+}
+
+template <typename CompFunc, typename Forwarder>
+void merge_and_forward(std::vector<merge_chunk> &chunks, const CompFunc &comp_func, const Forwarder &forwarder) {
+    std::priority_queue<merge_row, std::vector<merge_row>, decltype(comp_func)>
+        pri_queue(comp_func);
+
+    for (int ii = 0; ii < chunks.size(); ii++) {
+        if (!chunks[ii].empty()) {
+            chunks[ii].set_curr_chunk_id(ii);
+            pri_queue.push(std::move(chunks[ii].next_row()));
+        }
+    }
+
+    models::bin_chunk out_chunk;
+    out_chunk.data.reserve(5000);
+    out_chunk.id = 0;
+    while (!pri_queue.empty()) {
+        if (out_chunk.data.size() >= 5000) {
+            auto next_id = out_chunk.id + 1;
+            forwarder(out_chunk);
+            out_chunk.id = next_id;
+            out_chunk.data.clear();
+        }
+        auto next = pri_queue.top();
+        out_chunk.data.emplace_back(std::move(next.m_row));
+        pri_queue.pop();
+        if (!chunks[next.curr_chunk_id].empty()) {
+            pri_queue.push(
+                std::move(chunks[next.curr_chunk_id].next_row()));
+        }
+    }
+    if (!out_chunk.data.empty()) {
+        forwarder(out_chunk);
+    }
+
 }
 
 bool mergestmt::run_merge_worker(
@@ -48,7 +84,8 @@ bool mergestmt::run_merge_worker(
 
     bool reverse_compare = true;
 
-    const auto comp_func = [&](const merge_row &a, const merge_row &b) {
+    const auto comp_func = [this, &reverse_compare](const merge_row &a,
+                                                    const merge_row &b) {
         for (auto &col : this->columns) {
             if (a.m_row[col.pos] > b.m_row[col.pos]) {
                 return reverse_compare != col.descending;
@@ -68,42 +105,8 @@ bool mergestmt::run_merge_worker(
         in_chunk = in_queue.dequeue();
     }
 
-    std::priority_queue<merge_row, std::vector<merge_row>, decltype(comp_func)>
-        pri_queue(comp_func);
-
-    for (int ii = 0; ii < chunks.size(); ii++) {
-        if (!chunks[ii].empty()) {
-            chunks[ii][0].curr_chunk_id = ii;
-            pri_queue.push(std::move(chunks[ii][0]));
-        }
-    }
-
-    models::bin_chunk out_chunk;
-    out_chunk.data.reserve(5000);
-    out_chunk.id = 0;
-    while (!pri_queue.empty()) {
-        if (out_chunk.data.size() >= 5000) {
-            auto next_id = out_chunk.id + 1;
-            forwarder(out_chunk);
-            out_chunk.id = next_id;
-            out_chunk.data.clear();
-        }
-        auto next = pri_queue.top();
-        out_chunk.data.emplace_back(std::move(next.m_row));
-        pri_queue.pop();
-        ++next.chunk_pos;
-        if (next.chunk_pos < chunks[next.curr_chunk_id].size()) {
-            chunks[next.curr_chunk_id][next.chunk_pos].curr_chunk_id =
-                next.curr_chunk_id;
-            chunks[next.curr_chunk_id][next.chunk_pos].chunk_pos =
-                next.chunk_pos;
-            pri_queue.push(
-                std::move(chunks[next.curr_chunk_id][next.chunk_pos]));
-        }
-    }
-    if (!out_chunk.data.empty()) {
-        forwarder(out_chunk);
-    }
+    merge_and_forward(chunks, comp_func, forwarder);
     return true;
 }
+
 } // namespace engine

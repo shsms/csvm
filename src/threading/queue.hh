@@ -1,8 +1,8 @@
 #ifndef CSVM_QUEUE_HH
 #define CSVM_QUEUE_HH
 
-#include "locks.hh"
 #include "../models/models.hh"
+#include "locks.hh"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>

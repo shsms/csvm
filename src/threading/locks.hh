@@ -10,21 +10,21 @@ namespace threading {
 using namespace std::chrono_literals;
 
 struct fake_lock {
-    void lock() {}
-    void unlock() {}
+    inline void lock() {}
+    inline void unlock() {}
 };
 
 class spin_lock {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
 
   public:
-    void lock() {
+    inline void lock() {
         while (flag.test_and_set(std::memory_order_acquire)) {
             std::this_thread::sleep_for(100us);
         }
     }
 
-    void unlock() { flag.clear(std::memory_order_release); }
+    inline void unlock() { flag.clear(std::memory_order_release); }
 };
 
 } // namespace threading

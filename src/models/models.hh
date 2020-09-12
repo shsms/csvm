@@ -9,10 +9,10 @@
 #include <typeindex>
 #include <variant>
 #include <vector>
+
 namespace models {
 
 using value = std::variant<std::string, double, bool>;
-
 using row = std::vector<value>;
 
 struct raw_chunk {

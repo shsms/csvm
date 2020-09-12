@@ -1,8 +1,8 @@
-#include <CLI/CLI.hpp>
 #include "csv/csv.hh"
 #include "engine/engine.hh"
 #include "parser/parser.hh"
 #include "threading/queue.hh"
+#include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
 #include <thread>
@@ -54,7 +54,8 @@ int main(int argc, char *argv[]) {
                    "defaults to number of threads");
     app.add_option("--chunk_size", chunk_size,
                    "size in bytes of each input chunk, defaults to 1e6");
-    app.add_flag("--print-engine", print_engine, "display how the engine is built and exit");
+    app.add_flag("--print-engine", print_engine,
+                 "display how the engine is built and exit");
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError &e) {

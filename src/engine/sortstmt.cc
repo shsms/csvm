@@ -7,6 +7,8 @@ namespace engine {
 
 using namespace std::chrono_literals;
 
+std::atomic<int> merge_chunk::filenum{};
+
 void sortstmt::add_ident(const std::string &col) {
     columns.emplace_back(sortspec{false, false, 0, col});
     ++curr_pos;
@@ -86,11 +88,11 @@ bool sortstmt::run_worker(
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         apply(in_chunk.value(), tmp_eval_stack);
-        merge_chunk new_chunk{};
+        sorted_rows sorted{};
         for (auto &r : in_chunk->data) {
-            new_chunk.emplace_back(merge_row{in_chunk->id, 0, 0, std::move(r)});
+            sorted.emplace_back(merge_row{in_chunk->id, 0, std::move(r)});
         }
-        to_merge.enqueue(std::move(new_chunk));
+        to_merge.enqueue(merge_chunk(std::move(sorted)));
         in_chunk = in_queue.dequeue();
     }
     barrier.arrive();
