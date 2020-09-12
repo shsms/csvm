@@ -1,6 +1,12 @@
-CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
+
+INCLUDES += -Ivendor/PEGTL/include
+INCLUDES += -Ivendor/fmt/include
+INCLUDES += -Ivendor/CLI11/include
+INCLUDES += -Ivendor/cereal/include
+
+CPPFLAGS = -std=c++17 ${INCLUDES} -O3
+
 LDFLAGS = -lpthread
 
 RUN_ARGS = -n 2 -f tq-01.csv --chunk_size 1e6
@@ -10,8 +16,8 @@ RUN_ARGS = -n 2 -f tq-01.csv --chunk_size 1e6
 SCRIPT = "to_num(askSz,bidSz); select(type=='q'); sort(askSz,bidSz); select(askSz > 1000 && bidSz < 1000); sort(arrTm); to_str(askSz,bidSz);"
 #SCRIPT = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
 #SCRIPT = ""
-SRCS = $(shell cd src && find * -type f -name '*.cc')
 
+SRCS = $(shell cd src && find * -type f -name '*.cc')
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
 ABS_HEADERS = $(shell find src -type f -name '*.hh')
