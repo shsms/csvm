@@ -9,7 +9,7 @@ CPPFLAGS = -std=c++17 ${INCLUDES} -O3
 
 LDFLAGS = -lpthread
 
-RUN_ARGS = -n 2 -f tq-01.csv --chunk_size 1e6
+RUN_ARGS = -n 2 -f tq.csv --chunk_size 1e6
 #SCRIPT = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
 #SCRIPT = "select(type=='q');"
 #SCRIPT = "select(type=='q'); sort(askSz)"

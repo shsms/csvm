@@ -36,16 +36,6 @@ struct bool_resp {
     bool is_bool;
 };
 
-inline bool string_equal(const std::string &a, const value &b) {
-    return a == std::get<std::string>(b);
-}
-
-inline bool value_equal(const value &a, const value &b) { return a == b; }
-
-inline bool value_lt(const value &a, const value &b) { return a < b; }
-
-inline bool value_gt(const value &a, const value &b) { return a > b; }
-
 inline void to_num(value &a) {
     double vv = 0.0;
     auto str = std::get<std::string>(a);
@@ -66,9 +56,7 @@ inline std::string to_str_impl(double a) {
     return str;
 }
 
-inline void to_str(value &a) {
-    a = std::move(to_str_impl(std::get<double>(a)));
-}
+inline void to_str(value &a) { a = std::move(to_str_impl(std::get<double>(a))); }
 
 inline void append_to_string(std::string &ret, const row &row) {
     static const std::string comma_str = ",";
@@ -87,20 +75,20 @@ inline void append_to_string_safe(std::string &ret, const row &row) {
     static const std::string comma_str = ",";
     static const std::string newline = "\n";
 
-    const auto append_value = [&ret](auto&& arg) {
-	using T = std::decay_t<decltype(arg)>;
-	if constexpr (std::is_same_v<T, std::string>) {
-	    ret += arg;
-	} else if constexpr (std::is_same_v<T, double>) {
-	    ret += to_str_impl(arg);
-	}
+    const auto append_value = [&ret](auto &&arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, std::string>) {
+            ret += arg;
+        } else if constexpr (std::is_same_v<T, double>) {
+            ret += to_str_impl(arg);
+        }
     };
     for (auto ii = 0; ii < row.size(); ii++) {
         if (ii == 0) {
-	    std::visit(append_value, row[ii]);
+            std::visit(append_value, row[ii]);
         } else {
             ret += comma_str;
-	    std::visit(append_value, row[ii]);
+            std::visit(append_value, row[ii]);
         }
     }
     ret += newline;
