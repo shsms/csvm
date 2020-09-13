@@ -8,8 +8,7 @@ std::string to_str_stmt::string() {
     std::string ret = "to_str:\n";
     if (col_pos.size() == columns.size()) {
         for (auto ii = 0; ii < col_pos.size(); ii++) {
-            ret +=
-                "\t" + std::to_string(col_pos[ii]) + " : " + columns[ii] + "\n";
+            ret += "\t" + std::to_string(col_pos[ii]) + " : " + columns[ii] + "\n";
         }
     } else {
         for (auto &col : columns) {
@@ -35,8 +34,7 @@ void to_str_stmt::set_header(models::header_row &h) {
     }
 }
 
-bool to_str_stmt::apply(models::row &row,
-                        std::stack<models::value> & /*eval_stack*/) {
+bool to_str_stmt::apply(models::row &row, std::stack<models::value> & /*eval_stack*/) {
     for (auto pos : col_pos) {
         models::to_str(row[pos]);
     }

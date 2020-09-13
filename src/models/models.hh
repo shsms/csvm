@@ -2,7 +2,6 @@
 #define CSVM_MODELS_H
 
 #include <any>
-#include <fmt/format.h>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -16,12 +15,12 @@ using value = std::variant<std::string, double, bool>;
 using row = std::vector<value>;
 
 struct raw_chunk {
-    int id;
+    int id{};
     std::string data;
 };
 
 struct bin_chunk {
-    int id;
+    int id{};
     std::vector<row> data;
 };
 
@@ -54,8 +53,7 @@ inline void to_num(value &a) {
         try {
             vv = std::stod(str);
         } catch (std::invalid_argument &) {
-            throw std::invalid_argument(std::string("non-numeric value '") +
-                                        str + "'");
+            throw std::invalid_argument(std::string("non-numeric value '") + str + "'");
         }
     }
     a = vv;

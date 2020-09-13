@@ -20,8 +20,7 @@ void sortstmt::add_oper(const std::string &oper) {
     } else if (oper == "n") {
         columns[curr_pos - 1].numeric = true;
     } else {
-        throw std::runtime_error(std::string("unknown operator to sort: ") +
-                                 oper);
+        throw std::runtime_error(std::string("unknown operator to sort: ") + oper);
     }
 }
 
@@ -53,8 +52,7 @@ std::string sortstmt::string() {
     return ret;
 }
 
-bool sortstmt::apply(models::bin_chunk &chunk,
-                     std::stack<models::value> & /*eval_stack*/) {
+bool sortstmt::apply(models::bin_chunk &chunk, std::stack<models::value> & /*eval_stack*/) {
     std::stable_sort(chunk.data.begin(), chunk.data.end(),
                      [this](const models::row &a, const models::row &b) {
                          for (auto &col : this->columns) {
@@ -72,9 +70,8 @@ bool sortstmt::apply(models::bin_chunk &chunk,
 
 void sortstmt::set_thread_count(int c) { barrier.expect(c); }
 
-bool sortstmt::run_worker(
-    threading::bin_queue &in_queue,
-    const std::function<void(models::bin_chunk &)> &forwarder) {
+bool sortstmt::run_worker(threading::bin_queue &in_queue,
+                          const std::function<void(models::bin_chunk &)> &forwarder) {
     bool f = false;
     auto owner = merge_thread_created.compare_exchange_strong(f, true);
     if (owner) {

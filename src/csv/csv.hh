@@ -19,9 +19,7 @@ template <typename F> class csv {
   public:
     csv(F fn) : proc_fn(fn) {}
 
-    inline void add_value(std::string &&v) {
-        curr_row.emplace_back(std::move(v));
-    }
+    inline void add_value(std::string &&v) { curr_row.emplace_back(std::move(v)); }
 
     inline void new_row() {
         proc_fn(curr_row);
@@ -56,8 +54,7 @@ template <> struct action<header_value> {
 };
 
 template <> struct action<value> {
-    template <typename Input, typename F>
-    inline static void apply(const Input &in, csv<F> &csv) {
+    template <typename Input, typename F> inline static void apply(const Input &in, csv<F> &csv) {
         csv.add_value(std::move(in.string()));
     }
 };
@@ -69,8 +66,7 @@ template <> struct action<line> {
     }
 };
 
-template <typename F>
-inline void parse_body(models::raw_chunk &&chunk, F proc_fn) {
+template <typename F> inline void parse_body(models::raw_chunk &&chunk, F proc_fn) {
     csv csv(proc_fn);
     tao::pegtl::string_input in(std::move(chunk.data), "csv");
     parse<file, action>(in, csv);

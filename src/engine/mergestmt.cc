@@ -14,8 +14,7 @@ void mergestmt::add_oper(const std::string &oper) {
     } else if (oper == "n") {
         columns[curr_pos - 1].numeric = true;
     } else {
-        throw std::runtime_error(std::string("unknown operator to sort: ") +
-                                 oper);
+        throw std::runtime_error(std::string("unknown operator to sort: ") + oper);
     }
 }
 
@@ -37,55 +36,16 @@ void mergestmt::set_header(models::header_row &h) {
 
 std::string mergestmt::string() { return ""; }
 
-bool mergestmt::apply(models::bin_chunk & /*chunk*/,
-                      std::stack<models::value> & /*eval_stack*/) {
+bool mergestmt::apply(models::bin_chunk & /*chunk*/, std::stack<models::value> & /*eval_stack*/) {
     return false;
 }
 
-template <typename CompFunc, typename Forwarder>
-void merge_and_forward(std::vector<merge_chunk> &chunks, const CompFunc &comp_func, const Forwarder &forwarder) {
-    std::priority_queue<merge_row, std::vector<merge_row>, decltype(comp_func)>
-        pri_queue(comp_func);
-
-    for (int ii = 0; ii < chunks.size(); ii++) {
-        if (!chunks[ii].empty()) {
-            chunks[ii].set_curr_chunk_id(ii);
-            pri_queue.push(std::move(chunks[ii].next_row()));
-        }
-    }
-
-    models::bin_chunk out_chunk;
-    out_chunk.data.reserve(5000);
-    out_chunk.id = 0;
-    while (!pri_queue.empty()) {
-        if (out_chunk.data.size() >= 5000) {
-            auto next_id = out_chunk.id + 1;
-            forwarder(out_chunk);
-            out_chunk.id = next_id;
-            out_chunk.data.clear();
-        }
-        auto next = pri_queue.top();
-        out_chunk.data.emplace_back(std::move(next.m_row));
-        pri_queue.pop();
-        if (!chunks[next.curr_chunk_id].empty()) {
-            pri_queue.push(
-                std::move(chunks[next.curr_chunk_id].next_row()));
-        }
-    }
-    if (!out_chunk.data.empty()) {
-        forwarder(out_chunk);
-    }
-
-}
-
-bool mergestmt::run_merge_worker(
-    threading::queue<merge_chunk> &in_queue,
-    const std::function<void(models::bin_chunk &)> &forwarder) {
-
+template <typename Collector>
+void mergestmt::merge_and_collect(std::vector<merge_chunk> &chunks, Collector &collector) {
+    // because pri_queue picks biggest first and we want smallest.
     bool reverse_compare = true;
 
-    const auto comp_func = [this, &reverse_compare](const merge_row &a,
-                                                    const merge_row &b) {
+    const auto comp_func = [this, &reverse_compare](const merge_row &a, const merge_row &b) {
         for (auto &col : this->columns) {
             if (a.m_row[col.pos] > b.m_row[col.pos]) {
                 return reverse_compare != col.descending;
@@ -97,15 +57,93 @@ bool mergestmt::run_merge_worker(
         return reverse_compare != (a.orig_chunk_id < b.orig_chunk_id);
     };
 
-    std::vector<merge_chunk> chunks{};
-    auto in_chunk = in_queue.dequeue();
+    std::priority_queue<merge_row, std::vector<merge_row>, decltype(comp_func)> pri_queue(
+        comp_func);
 
+    for (int ii = 0; ii < chunks.size(); ii++) {
+        if (!chunks[ii].empty()) {
+            chunks[ii].set_curr_chunk_id(ii);
+            pri_queue.push(std::move(chunks[ii].next_row()));
+        }
+    }
+
+    while (!pri_queue.empty()) {
+        auto next = pri_queue.top();
+        collector(next, false);
+        pri_queue.pop();
+        if (!chunks[next.curr_chunk_id].empty()) {
+            pri_queue.push(std::move(chunks[next.curr_chunk_id].next_row()));
+        }
+    }
+
+    // do I really want to change collector's first argument to raw
+    // pointer to avoid an extra static unused initialization below?
+    // std::optional can't carry reference and we need reference.  shared_ptr is
+    // probably too much unnecessary overhead.
+    static merge_row unused;
+    collector(unused, true);
+}
+
+bool mergestmt::run_merge_worker(threading::queue<merge_chunk> &in_queue,
+                                 const std::function<void(models::bin_chunk &)> &forwarder) {
+
+    std::vector<merge_chunk> chunks{};
+    // TODO: need additional merge levels to ensure there aren't too many files
+    // to merge at the same time.
+    std::vector<merge_chunk> file_chunks{};
+
+    auto file_collector = [chunk = sorted_rows{}, &file_chunks](merge_row &mr,
+                                                                bool cleanup_only) mutable {
+        if (cleanup_only) {
+            if (!chunk.empty()) {
+                file_chunks.back().write(chunk);
+                chunk.clear();
+            }
+            file_chunks.back().finish_writing();
+            return;
+        }
+        if (chunk.size() >= 5000) {
+            file_chunks.back().write(chunk);
+            chunk.clear();
+        }
+        chunk.emplace_back(std::move(mr));
+    };
+
+    auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
+        if (chunks.size() >= 100) {
+            file_chunks.emplace_back(merge_chunk());
+            merge_and_collect(chunks, file_collector);
+            chunks.clear();
+        }
         chunks.emplace_back(std::move(in_chunk.value()));
         in_chunk = in_queue.dequeue();
     }
 
-    merge_and_forward(chunks, comp_func, forwarder);
+    if (!file_chunks.empty() && !chunks.empty()) {
+        file_chunks.emplace_back(merge_chunk());
+        merge_and_collect(chunks, file_collector);
+    }
+
+    auto bin_chunk_collector = [chunk = models::bin_chunk{},
+                                &forwarder](merge_row &mr, bool cleanup_only) mutable {
+        if (cleanup_only && !chunk.data.empty()) {
+            forwarder(chunk);
+            return;
+        }
+        if (chunk.data.size() >= 5000) {
+            auto next_id = chunk.id + 1;
+            forwarder(chunk);
+            chunk.id = next_id;
+            chunk.data.clear();
+        }
+        chunk.data.emplace_back(std::move(mr.m_row));
+    };
+    if (!file_chunks.empty()) {
+        merge_and_collect(file_chunks, bin_chunk_collector);
+    } else {
+        merge_and_collect(chunks, bin_chunk_collector);
+    }
     return true;
 }
 

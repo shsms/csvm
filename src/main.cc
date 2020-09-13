@@ -1,35 +1,12 @@
 #include "csv/csv.hh"
 #include "engine/engine.hh"
+#include "input.hh"
 #include "parser/parser.hh"
 #include "threading/queue.hh"
 #include <CLI/CLI.hpp>
 #include <fstream>
 #include <iostream>
 #include <thread>
-
-std::string next_chunk(std::ifstream &file, uint64_t max_chunk_size) {
-    std::string chunk;
-
-    auto beginning = file.tellg();
-    file.seekg(0, std::ios::end);
-    auto end = file.tellg();
-    auto chunksize = end - beginning;
-
-    if (chunksize > max_chunk_size) {
-        chunksize = max_chunk_size;
-    }
-    chunk.resize(chunksize);
-    file.seekg(beginning);
-    file.read(&chunk[0], chunk.size());
-    if (!file.eof()) {
-        std::string line;
-        std::getline(file, line);
-        if (line.length() > 0) {
-            chunk += line;
-        }
-    }
-    return chunk;
-}
 
 int main(int argc, char *argv[]) {
     CLI::App app;
@@ -41,21 +18,16 @@ int main(int argc, char *argv[]) {
     int out_queue_size{};
     double chunk_size{1e6};
     bool print_engine{false};
-    app.add_option(
-           "-f", filename,
-           "csv filename, required until next_stdin_chunk is implemented")
+    app.add_option("-f", filename, "csv filename, required until next_stdin_chunk is implemented")
         ->required()
         ->check(CLI::ExistingFile);
     app.add_option("script", script, "script to execute")->required();
     app.add_option("-n", thread_count, "number of threads, defaults to 1");
-    app.add_option("--in-queue-size", in_queue_size,
-                   "defaults to number of threads");
-    app.add_option("--out-queue-size", out_queue_size,
-                   "defaults to number of threads");
+    app.add_option("--in-queue-size", in_queue_size, "defaults to number of threads");
+    app.add_option("--out-queue-size", out_queue_size, "defaults to number of threads");
     app.add_option("--chunk_size", chunk_size,
                    "size in bytes of each input chunk, defaults to 1e6");
-    app.add_flag("--print-engine", print_engine,
-                 "display how the engine is built and exit");
+    app.add_flag("--print-engine", print_engine, "display how the engine is built and exit");
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError &e) {
@@ -80,8 +52,7 @@ int main(int argc, char *argv[]) {
 
     engine::engine e(thread_count, in_queue_size, out_queue_size);
     parser::run(script, e);
-    auto file = std::ifstream(filename, std::ios::in | std::ios::binary);
-
+    auto file = std::fstream(filename, std::ios::in | std::ios::binary);
     e.finalize();
     // std::cerr << e.string();
     if (!e.has_header()) {

@@ -43,11 +43,8 @@ void entry_worker(threading::raw_queue &in_queue, const tblock &block,
 void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
                          threading::bin_queue &out_queue) {
     // TODO: make forwarder move-only
-    auto forwarder = [&out_queue](models::bin_chunk &c) {
-        out_queue.enqueue(std::move(c));
-    };
-    if (block.exec_order == stmt::sep_block &&
-        block.stmts[0]->run_worker(in_queue, forwarder)) {
+    auto forwarder = [&out_queue](models::bin_chunk &c) { out_queue.enqueue(std::move(c)); };
+    if (block.exec_order == stmt::sep_block && block.stmts[0]->run_worker(in_queue, forwarder)) {
         return;
     }
     std::stack<models::value> tmp_eval_stack;
@@ -78,8 +75,7 @@ void exit_worker(threading::bin_queue &in_queue, const tblock &block,
         print_buffer.clear();
     };
 
-    if (block.exec_order == stmt::sep_block &&
-        block.stmts[0]->run_worker(in_queue, forwarder)) {
+    if (block.exec_order == stmt::sep_block && block.stmts[0]->run_worker(in_queue, forwarder)) {
         return;
     }
 
@@ -135,9 +131,7 @@ void engine::finish_stmt() {
     prev_exec_order = exec_order;
 };
 
-void engine::add_ident(const std::string &ident) {
-    curr_stmt->add_ident(ident);
-};
+void engine::add_ident(const std::string &ident) { curr_stmt->add_ident(ident); };
 
 void engine::add_str(const std::string &str) { curr_stmt->add_str(str); };
 
@@ -147,8 +141,7 @@ void engine::add_bang() { curr_stmt->add_bang(); };
 
 void engine::add_oper(const std::string &oper) { curr_stmt->add_oper(oper); }
 
-bool apply(const tblock &block, models::row &row,
-           std::stack<models::value> &eval_stack) {
+bool apply(const tblock &block, models::row &row, std::stack<models::value> &eval_stack) {
     bool keep = true;
     for (const auto &s : block.stmts) {
         keep = s->apply(row, eval_stack);
@@ -159,8 +152,7 @@ bool apply(const tblock &block, models::row &row,
     return true;
 }
 
-bool apply(const tblock &block, models::bin_chunk &chunk,
-           std::stack<models::value> &eval_stack) {
+bool apply(const tblock &block, models::bin_chunk &chunk, std::stack<models::value> &eval_stack) {
     bool keep = true;
     for (const auto &s : block.stmts) {
         keep = s->apply(chunk, eval_stack);
@@ -180,8 +172,7 @@ std::string engine::string() {
         ret += "\nblock: " + std::to_string(bctr) +
                ". exec_order: " + std::to_string(block.exec_order) + "\n";
         for (auto &s : block.stmts) {
-            ret += std::to_string(bctr) + "." + std::to_string(++sctr) + ". " +
-                   s->string();
+            ret += std::to_string(bctr) + "." + std::to_string(++sctr) + ". " + s->string();
         }
     }
     return ret;
@@ -231,25 +222,21 @@ void engine::start() {
     if (tblocks.size() == 1) {
         thread_groups.resize(1);
         for (int ii = 0; ii < thread_count; ii++) {
-            thread_groups.front().emplace_back(std::thread([&]() {
-                entry_exit_worker(input_queue, tblocks.front(), print_queue);
-            }));
+            thread_groups.front().emplace_back(std::thread(
+                [&]() { entry_exit_worker(input_queue, tblocks.front(), print_queue); }));
         }
     } else {
         thread_groups.resize(tblocks.size());
         for (int ii = 0; ii < thread_count; ++ii) {
-            thread_groups.front().emplace_back(std::thread([&]() {
-                entry_worker(input_queue, tblocks.front(), block_queues[0]);
-            }));
+            thread_groups.front().emplace_back(std::thread(
+                [&]() { entry_worker(input_queue, tblocks.front(), block_queues[0]); }));
             for (auto jj = 0; jj < tblocks.size() - 2; ++jj) {
                 thread_groups[jj + 1].emplace_back(std::thread([&, jj]() {
-                    intermediate_worker(block_queues[jj], tblocks[jj + 1],
-                                        block_queues.at(jj + 1));
+                    intermediate_worker(block_queues[jj], tblocks[jj + 1], block_queues.at(jj + 1));
                 }));
             }
-            thread_groups.back().emplace_back(std::thread([&]() {
-                exit_worker(block_queues.back(), tblocks.back(), print_queue);
-            }));
+            thread_groups.back().emplace_back(std::thread(
+                [&]() { exit_worker(block_queues.back(), tblocks.back(), print_queue); }));
         }
     }
 }

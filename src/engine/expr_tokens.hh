@@ -13,8 +13,7 @@ class token {
   public:
     token(std::string s) : str_repr(std::move(s)) {}
     virtual ~token() {}
-    virtual void apply(const models::row &,
-                       std::stack<models::value> &) const = 0;
+    virtual void apply(const models::row &, std::stack<models::value> &) const = 0;
     virtual void set_header(const models::header_row & /*unused*/){};
     virtual const std::string &string() { return str_repr; };
 };

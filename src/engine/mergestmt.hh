@@ -10,6 +10,9 @@ class mergestmt : public stmt {
     int curr_pos{};
     std::vector<sortspec> columns;
 
+    template <typename Collector>
+    void merge_and_collect(std::vector<merge_chunk> &chunks, Collector &collector);
+
   public:
     mergestmt(const std::vector<sortspec> &cols) : columns(cols) {}
 
@@ -20,11 +23,9 @@ class mergestmt : public stmt {
     inline stmt::exec_order finalize() override { return sep_block; }
 
     void set_header(models::header_row &h) override;
-    bool apply(models::bin_chunk &chunk,
-               std::stack<models::value> &eval_stack) override;
-    bool
-    run_merge_worker(threading::queue<merge_chunk> &in_queue,
-                     const std::function<void(models::bin_chunk &)> &forwarder);
+    bool apply(models::bin_chunk &chunk, std::stack<models::value> &eval_stack) override;
+    bool run_merge_worker(threading::queue<merge_chunk> &in_queue,
+                          const std::function<void(models::bin_chunk &)> &forwarder);
 };
 
 } // namespace engine
