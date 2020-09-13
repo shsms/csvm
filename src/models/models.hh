@@ -59,11 +59,15 @@ inline void to_num(value &a) {
     a = vv;
 }
 
-inline void to_str(value &a) {
-    auto str = std::to_string(std::get<double>(a));
+inline std::string to_str_impl(double a) {
+    auto str = std::to_string(a);
     str.erase(str.find_last_not_of('0') + 1, std::string::npos);
     str.erase(str.find_last_not_of('.') + 1, std::string::npos);
-    a = std::move(str);
+    return str;
+}
+
+inline void to_str(value &a) {
+    a = std::move(to_str_impl(std::get<double>(a)));
 }
 
 inline void append_to_string(std::string &ret, const row &row) {
@@ -74,6 +78,29 @@ inline void append_to_string(std::string &ret, const row &row) {
             ret += std::get<std::string>(row[ii]);
         } else {
             ret += comma_str + std::get<std::string>(row[ii]);
+        }
+    }
+    ret += newline;
+}
+
+inline void append_to_string_safe(std::string &ret, const row &row) {
+    static const std::string comma_str = ",";
+    static const std::string newline = "\n";
+
+    const auto append_value = [&ret](auto&& arg) {
+	using T = std::decay_t<decltype(arg)>;
+	if constexpr (std::is_same_v<T, std::string>) {
+	    ret += arg;
+	} else if constexpr (std::is_same_v<T, double>) {
+	    ret += to_str_impl(arg);
+	}
+    };
+    for (auto ii = 0; ii < row.size(); ii++) {
+        if (ii == 0) {
+	    std::visit(append_value, row[ii]);
+        } else {
+            ret += comma_str;
+	    std::visit(append_value, row[ii]);
         }
     }
     ret += newline;

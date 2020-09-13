@@ -111,7 +111,7 @@ bool mergestmt::run_merge_worker(threading::queue<merge_chunk> &in_queue,
 
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
-        if (chunks.size() >= 100) {
+        if (chunks.size() >= 50) {
             file_chunks.emplace_back(merge_chunk());
             merge_and_collect(chunks, file_collector);
             chunks.clear();

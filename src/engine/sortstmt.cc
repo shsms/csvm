@@ -75,6 +75,7 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
     bool f = false;
     auto owner = merge_thread_created.compare_exchange_strong(f, true);
     if (owner) {
+	to_merge.set_limit(50);
         merge_thread = std::thread([this, forwarder]() {
             mergestmt mstmt(this->columns);
             mstmt.run_merge_worker(to_merge, forwarder);
