@@ -16,6 +16,7 @@ template <typename T> class queue;
 
 using raw_queue = queue<models::raw_chunk>;
 using bin_queue = queue<models::bin_chunk>;
+using multi_queue = queue<std::variant<models::bin_chunk, models::raw_chunk>>;
 
 template <typename T> class queue {
     int limit = 10;

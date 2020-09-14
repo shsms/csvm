@@ -6,7 +6,7 @@
 namespace engine {
 
 void entry_exit_worker(threading::raw_queue &queue, const tblock &block,
-                       threading::raw_queue &print_queue) {
+                       threading::multi_queue &print_queue) {
     std::stack<models::value> tmp_eval_stack;
     std::string print_buffer;
     auto chunk = queue.dequeue();
@@ -16,7 +16,7 @@ void entry_exit_worker(threading::raw_queue &queue, const tblock &block,
                 models::append_to_string(print_buffer, row);
             }
         });
-        print_queue.enqueue({chunk->id, std::move(print_buffer)});
+        print_queue.enqueue(models::raw_chunk{chunk->id, std::move(print_buffer)});
         print_buffer.clear();
         chunk = queue.dequeue();
     }
@@ -40,10 +40,11 @@ void entry_worker(threading::raw_queue &in_queue, const tblock &block,
     }
 }
 
-void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
-                         threading::bin_queue &out_queue) {
+template <typename Queue>
+void subseq_worker(threading::bin_queue &in_queue, const tblock &block,
+                         Queue &out_queue) {
     // TODO: make forwarder move-only
-    auto forwarder = [&out_queue](models::bin_chunk &c) { out_queue.enqueue(std::move(c)); };
+    auto forwarder = [&out_queue](auto &&c) { out_queue.enqueue(std::move(c)); };
     if (block.exec_order == stmt::sep_block && block.stmts[0]->run_worker(in_queue, forwarder)) {
         return;
     }
@@ -57,50 +58,36 @@ void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
                 out_chunk.data.emplace_back(row);
             }
         }
-        out_queue.enqueue(std::move(out_chunk));
+	forwarder(std::move(out_chunk));
         out_chunk.data.clear();
         in_chunk = in_queue.dequeue();
     }
 }
 
-void exit_worker(threading::bin_queue &in_queue, const tblock &block,
-                 threading::raw_queue &print_queue) {
-    std::string print_buffer;
-
-    auto forwarder = [&print_queue, &print_buffer](models::bin_chunk &c) {
-        for (const auto &row : c.data) {
-            models::append_to_string(print_buffer, row);
-        }
-        print_queue.enqueue({c.id, std::move(print_buffer)});
-        print_buffer.clear();
-    };
-
-    if (block.exec_order == stmt::sep_block && block.stmts[0]->run_worker(in_queue, forwarder)) {
-        return;
-    }
-
-    std::stack<models::value> tmp_eval_stack;
-    std::string out_buffer;
-    auto in_chunk = in_queue.dequeue();
-    while (in_chunk.has_value()) {
-        for (auto &row : in_chunk.value().data) {
-            if (apply(block, row, tmp_eval_stack)) {
-                models::append_to_string(out_buffer, row);
-            }
-        }
-        print_queue.enqueue({in_chunk->id, std::move(out_buffer)});
-        in_chunk = in_queue.dequeue();
-    }
-}
-
-void print_worker(threading::queue<models::raw_chunk> &queue) {
+void print_worker(threading::multi_queue &queue) {
     int next = 0;
     std::unordered_map<int, std::string> items;
 
+    models::raw_chunk raw_chunk;
+    const auto process_chunk = [&raw_chunk](auto& c) {
+	    using T = std::decay_t<decltype(c)>;
+	    if constexpr(std::is_same_v<T, models::raw_chunk>) {
+		raw_chunk = std::move(c);
+	    } else { // else it has to be a models::bin_chunk.
+		raw_chunk.id = c.id;
+		raw_chunk.data.clear();
+		for (auto &row : c.data) {
+		    models::append_to_string(raw_chunk.data, row);
+		}
+	    }
+    };
     auto chunk = queue.dequeue();
     while (chunk.has_value()) {
-        if (chunk->id == next) {
-            std::cout << chunk->data;
+	auto &multi_chunk = chunk.value();
+	std::visit(process_chunk, multi_chunk);
+	
+        if (raw_chunk.id == next) {
+            std::cout << raw_chunk.data;
             ++next;
             while (items.count(next) > 0) {
                 std::cout << items.at(next);
@@ -110,7 +97,7 @@ void print_worker(threading::queue<models::raw_chunk> &queue) {
                 ++next;
             }
         } else {
-            items.emplace(chunk->id, std::move(chunk->data));
+            items.emplace(raw_chunk.id, std::move(raw_chunk.data));
         }
         chunk = queue.dequeue();
     }
@@ -232,11 +219,11 @@ void engine::start() {
                 [&]() { entry_worker(input_queue, tblocks.front(), block_queues[0]); }));
             for (auto jj = 0; jj < tblocks.size() - 2; ++jj) {
                 thread_groups[jj + 1].emplace_back(std::thread([&, jj]() {
-                    intermediate_worker(block_queues[jj], tblocks[jj + 1], block_queues.at(jj + 1));
+                    subseq_worker(block_queues[jj], tblocks[jj + 1], block_queues.at(jj + 1));
                 }));
             }
             thread_groups.back().emplace_back(std::thread(
-                [&]() { exit_worker(block_queues.back(), tblocks.back(), print_queue); }));
+                [&]() { subseq_worker(block_queues.back(), tblocks.back(), print_queue); }));
         }
     }
 }
