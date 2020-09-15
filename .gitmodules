@@ -10,6 +10,3 @@
 [submodule "vendor/CLI11"]
 	path = vendor/CLI11
 	url = https://github.com/CLIUtils/CLI11
-[submodule "vendor/cereal"]
-	path = vendor/cereal
-	url = https://github.com/USCiLab/cereal

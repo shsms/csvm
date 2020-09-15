@@ -24,9 +24,7 @@ class stmt {
         throw std::runtime_error("stmt::add_num not implemented");
     }
 
-    virtual void add_bang() {
-        throw std::runtime_error("stmt::add_bang not implemented");
-    }
+    virtual void add_bang() { throw std::runtime_error("stmt::add_bang not implemented"); }
 
     virtual void add_oper(const std::string & /*unused*/) {
         throw std::runtime_error("stmt::add_oper not implemented");
@@ -42,19 +40,16 @@ class stmt {
 
     virtual std::string string() = 0;
 
-    virtual bool apply(models::row &row,
-                       std::stack<models::value> &eval_stack) {
+    virtual bool apply(models::row & /*row*/, std::stack<models::value> & /*eval_stack*/) {
         throw std::runtime_error("stmt::apply<row> not implemented");
     }
 
-    virtual bool apply(models::bin_chunk &chunk,
-                       std::stack<models::value> &eval_stack) {
+    virtual bool apply(models::bin_chunk & /*chunk*/, std::stack<models::value> & /*eval_stack*/) {
         throw std::runtime_error("stmt::apply<chunk> not implemented");
     }
 
-    virtual bool
-    run_worker(threading::bin_queue &in_queue,
-               const std::function<void(models::bin_chunk &)> &forwarder) {
+    virtual bool run_worker(threading::bin_queue & /*in_queue*/,
+                            const std::function<void(models::bin_chunk &)> & /*forwarder*/) {
         return false;
     }
 };

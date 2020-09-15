@@ -5,36 +5,31 @@
 namespace engine::expr {
 
 const std::unordered_map<std::string, int> expr::precedence = {
-    {"(", -1}, {"!", 0},  {"*", 1},  {"/", 1},  {"/", 1},  {"+", 2},
-    {"-", 2},  {"<", 3},  {">", 3},  {"<=", 3}, {">=", 3}, {"==", 4},
-    {"=~", 4}, {"!=", 4}, {"&&", 5}, {"||", 6}, {")", 7},  {"=", 8},
+    {"(", -1}, {"!", 0},  {"*", 1},  {"/", 1},  {"/", 1},  {"+", 2},  {"-", 2},  {"<", 3}, {">", 3},
+    {"<=", 3}, {">=", 3}, {"==", 4}, {"=~", 4}, {"!=", 4}, {"&&", 5}, {"||", 6}, {")", 7}, {"=", 8},
 };
 
 void expr::add_ident(const std::string &val) {
-    steps.emplace_back(
-        std::static_pointer_cast<token>(std::make_shared<ident>(val)));
+    steps.emplace_back(std::static_pointer_cast<token>(std::make_shared<ident>(val)));
 }
 
 void expr::add_str(const std::string &val) {
-    steps.emplace_back(std::static_pointer_cast<token>(
-        std::make_shared<str>(val.substr(1, val.length() - 2))));
+    steps.emplace_back(
+        std::static_pointer_cast<token>(std::make_shared<str>(val.substr(1, val.length() - 2))));
 }
 
 void expr::add_num(const std::string &str) {
-    steps.emplace_back(
-        std::static_pointer_cast<token>(std::make_shared<num>(str)));
+    steps.emplace_back(std::static_pointer_cast<token>(std::make_shared<num>(str)));
 }
 
 void expr::add_bang() {
-    steps.emplace_back(
-        std::static_pointer_cast<token>(std::make_shared<not_oper>("!")));
+    steps.emplace_back(std::static_pointer_cast<token>(std::make_shared<not_oper>("!")));
 }
 
 void expr::add_oper(const std::string &oper) {
     if (!stack.empty() && oper != "(") {
         auto op_prec = precedence.find(oper)->second;
-        for (auto a = stack.back();
-             op_prec > precedence.find(a->string())->second;) {
+        for (auto a = stack.back(); op_prec > precedence.find(a->string())->second;) {
             if (oper == ")" && a->string() == "(") {
                 stack.pop_back();
                 break;
@@ -51,32 +46,23 @@ void expr::add_oper(const std::string &oper) {
         }
     }
     if (oper == "<") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<lt_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<lt_oper>(oper)));
     } else if (oper == ">") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<gt_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<gt_oper>(oper)));
     } else if (oper == "<=") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<lte_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<lte_oper>(oper)));
     } else if (oper == ">=") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<gte_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<gte_oper>(oper)));
     } else if (oper == "==") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<eq_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<eq_oper>(oper)));
     } else if (oper == "!=") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<neq_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<neq_oper>(oper)));
     } else if (oper == "&&") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<and_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<and_oper>(oper)));
     } else if (oper == "||") {
-        stack.emplace_back(
-            std::static_pointer_cast<token>(std::make_shared<or_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<or_oper>(oper)));
     } else if (oper == "(") {
-        stack.emplace_back(std::static_pointer_cast<token>(
-            std::make_shared<oparan_oper>(oper)));
+        stack.emplace_back(std::static_pointer_cast<token>(std::make_shared<oparan_oper>(oper)));
     } else if (oper == ")") {
         // do nothing here I guess
     }

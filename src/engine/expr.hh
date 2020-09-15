@@ -23,8 +23,7 @@ class expr : public stmt {
     exec_order finalize() override;
     std::string string() override;
     void set_header(models::header_row &h) override;
-    bool apply(models::row & /*unused*/,
-               std::stack<models::value> &eval_stack) override;
+    bool apply(models::row & /*unused*/, std::stack<models::value> &eval_stack) override;
 };
 
 } // namespace engine::expr

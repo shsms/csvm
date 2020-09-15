@@ -16,8 +16,7 @@ std::string colsstmt::string() {
     std::string ret = "cols:" + excl + "\n";
     if (col_pos.size() == columns.size()) {
         for (auto ii = 0; ii < col_pos.size(); ii++) {
-            ret +=
-                "\t" + std::to_string(col_pos[ii]) + " : " + columns[ii] + "\n";
+            ret += "\t" + std::to_string(col_pos[ii]) + " : " + columns[ii] + "\n";
         }
     } else {
         for (auto &col : columns) {
@@ -68,8 +67,7 @@ void colsstmt::set_exclude_header(models::header_row &h) {
     h = std::move(out_headers);
 }
 
-bool colsstmt::apply(models::row &row,
-                     std::stack<models::value> & /*eval_stack*/) {
+bool colsstmt::apply(models::row &row, std::stack<models::value> & /*eval_stack*/) {
     models::row ret;
     for (auto pos : col_pos) {
         ret.push_back(row[pos]);

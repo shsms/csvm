@@ -4,8 +4,7 @@ namespace engine::expr {
 
 ident::ident(const std::string &s) : token(s) { value = s; }
 
-void ident::apply(const models::row &row,
-                  std::stack<models::value> &eval_stack) const {
+void ident::apply(const models::row &row, std::stack<models::value> &eval_stack) const {
     eval_stack.emplace(row[col_pos]);
 }
 
@@ -21,8 +20,7 @@ void ident::set_header(const models::header_row &h) {
 
 str::str(const std::string &s) : token(s) { value = s; }
 
-void str::apply(const models::row & /*row*/,
-                std::stack<models::value> &eval_stack) const {
+void str::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     eval_stack.emplace(value);
 }
 
@@ -30,80 +28,70 @@ num::num(const std::string &s) : token(s) { value = std::stod(s); }
 
 num::num(const double &d) : token(std::to_string(d)) { value = d; }
 
-void num::apply(const models::row & /*row*/,
-                std::stack<models::value> &eval_stack) const {
+void num::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     eval_stack.emplace(value);
 }
 
-void not_oper::apply(const models::row & /*row*/,
-                     std::stack<models::value> &eval_stack) const {
+void not_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op = std::get<bool>(eval_stack.top());
     eval_stack.pop();
     eval_stack.emplace(!op);
 }
 
-void gte_oper::apply(const models::row & /*row*/,
-                     std::stack<models::value> &eval_stack) const {
+void gte_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = eval_stack.top();
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(!models::value_lt(op1, op2));
+    eval_stack.emplace(op1 >= op2);
 }
 
-void lte_oper::apply(const models::row & /*row*/,
-                     std::stack<models::value> &eval_stack) const {
+void lte_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = eval_stack.top();
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(!models::value_gt(op1, op2));
+    eval_stack.emplace(op1 <= op2);
 }
 
-void gt_oper::apply(const models::row & /*row*/,
-                    std::stack<models::value> &eval_stack) const {
+void gt_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = eval_stack.top();
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::value_gt(op1, op2));
+    eval_stack.emplace(op1 > op2);
 }
 
-void lt_oper::apply(const models::row & /*row*/,
-                    std::stack<models::value> &eval_stack) const {
+void lt_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = eval_stack.top();
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::value_lt(op1, op2));
+    eval_stack.emplace(op1 < op2);
 }
 
-void eq_oper::apply(const models::row & /*row*/,
-                    std::stack<models::value> &eval_stack) const {
+void eq_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     // TODO: ref vs value
     auto op2 = eval_stack.top();
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(models::value_equal(op1, op2));
+    eval_stack.emplace(op1 == op2);
 }
 
-void regex_oper::apply(const models::row &row,
-                       std::stack<models::value> &eval_stack) const {
+void regex_oper::apply(const models::row &row, std::stack<models::value> &eval_stack) const {
     // TODO
 }
 
-void neq_oper::apply(const models::row & /*row*/,
-                     std::stack<models::value> &eval_stack) const {
+void neq_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = eval_stack.top();
     eval_stack.pop();
     auto op1 = eval_stack.top();
     eval_stack.pop();
-    eval_stack.emplace(!models::value_equal(op1, op2));
+    eval_stack.emplace(op1 != op2);
 }
 
-void and_oper::apply(const models::row & /*row*/,
-                     std::stack<models::value> &eval_stack) const {
+void and_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = std::get<bool>(eval_stack.top());
     eval_stack.pop();
     auto op1 = std::get<bool>(eval_stack.top());
@@ -114,8 +102,7 @@ void and_oper::apply(const models::row & /*row*/,
     eval_stack.emplace(op1 && op2);
 }
 
-void or_oper::apply(const models::row & /*row*/,
-                    std::stack<models::value> &eval_stack) const {
+void or_oper::apply(const models::row & /*row*/, std::stack<models::value> &eval_stack) const {
     auto op2 = std::get<bool>(eval_stack.top());
     eval_stack.pop();
     auto op1 = std::get<bool>(eval_stack.top());

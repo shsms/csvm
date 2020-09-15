@@ -1,7 +1,10 @@
 #ifndef CSVM_SORTSTMT_HH
 #define CSVM_SORTSTMT_HH
 
+#include "../csv/csv.hh"
+#include "../input.hh"
 #include "../threading/barrier.hh"
+#include "merge_chunk.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <fmt/format.h>
@@ -17,15 +20,6 @@ struct sortspec {
     std::string name;
 };
 
-struct merge_row {
-    int orig_chunk_id; // for stable sorting
-    int curr_chunk_id; // to pick next row from, while merging.
-    int chunk_pos;
-    models::row m_row;
-};
-
-using merge_chunk = std::vector<merge_row>;
-
 class sortstmt : public stmt {
   private:
     int curr_pos{};
@@ -34,7 +28,10 @@ class sortstmt : public stmt {
     std::atomic<bool> merge_thread_created{false};
     std::thread merge_thread;
     threading::queue<merge_chunk> to_merge;
+    threading::queue<models::bin_chunk> merged;
     threading::barrier barrier;
+
+    int thread_count{1};
 
   public:
     void add_ident(const std::string &col) override;
@@ -45,11 +42,9 @@ class sortstmt : public stmt {
 
     void set_header(models::header_row & /*unused*/) override;
     void set_thread_count(int /*unused*/) override;
-    bool apply(models::bin_chunk & /*chunk*/,
-               std::stack<models::value> & /*eval_stack*/) override;
-    bool run_worker(
-        threading::bin_queue & /*in_queue*/,
-        const std::function<void(models::bin_chunk &)> & /*unused*/) override;
+    bool apply(models::bin_chunk & /*chunk*/, std::stack<models::value> & /*eval_stack*/) override;
+    bool run_worker(threading::bin_queue & /*in_queue*/,
+                    const std::function<void(models::bin_chunk &)> & /*unused*/) override;
 };
 
 } // namespace engine

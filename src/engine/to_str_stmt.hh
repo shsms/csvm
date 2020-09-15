@@ -15,8 +15,7 @@ class to_str_stmt : public stmt {
     std::string string() override;
 
     void set_header(models::header_row &h) override;
-    bool apply(models::row &row,
-               std::stack<models::value> &eval_stack) override;
+    bool apply(models::row &row, std::stack<models::value> &eval_stack) override;
 };
 
 } // namespace engine
