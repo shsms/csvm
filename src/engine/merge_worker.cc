@@ -1,47 +1,10 @@
-#include "mergestmt.hh"
+#include "merge_worker.hh"
 #include <memory_resource>
 
 namespace engine {
 
-void mergestmt::add_ident(const std::string &col) {
-    columns.emplace_back(sortspec{false, false, 0, col});
-    ++curr_pos;
-}
-
-void mergestmt::add_oper(const std::string &oper) {
-    if (oper == "r") {
-        columns[curr_pos - 1].descending = true;
-    } else if (oper == "n") {
-        columns[curr_pos - 1].numeric = true;
-    } else {
-        throw std::runtime_error(std::string("unknown operator to sort: ") + oper);
-    }
-}
-
-void mergestmt::set_header(models::header_row &h) {
-    for (auto &col : columns) {
-        bool found = false;
-        for (auto ii = 0; ii < h.size(); ++ii) {
-            if (col.name == h[ii].name) {
-                col.pos = ii;
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            throw std::runtime_error("column not found in header:" + col.name);
-        }
-    }
-}
-
-std::string mergestmt::string() { return ""; }
-
-bool mergestmt::apply(models::bin_chunk & /*chunk*/, std::stack<models::value> & /*eval_stack*/) {
-    return false;
-}
-
 template <typename Collector>
-void mergestmt::merge_and_collect(std::vector<merge_chunk> &chunks, Collector &collector) {
+void merge_worker::merge_and_collect(std::vector<merge_chunk> &chunks, Collector &collector) {
     // because pri_queue picks biggest first and we want smallest.
     bool reverse_compare = true;
 
@@ -84,8 +47,7 @@ void mergestmt::merge_and_collect(std::vector<merge_chunk> &chunks, Collector &c
     collector(unused, true);
 }
 
-bool mergestmt::run_merge_worker(threading::queue<merge_chunk> &in_queue,
-                                 threading::bin_queue &merged) {
+bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_queue &merged) {
 
     std::vector<merge_chunk> chunks{};
     // TODO: need additional merge levels to ensure there aren't too many files

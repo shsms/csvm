@@ -1,5 +1,5 @@
 #include "sortstmt.hh"
-#include "mergestmt.hh"
+#include "merge_worker.hh"
 #include <chrono>
 #include <iostream>
 
@@ -78,8 +78,8 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
         // TODO: same as number of chunks to merge at a time.
         to_merge.set_limit(50);
         merge_thread = std::thread([this, forwarder]() {
-            mergestmt mstmt(this->columns);
-            mstmt.run_merge_worker(to_merge, merged);
+            merge_worker merger(this->columns);
+            merger.run(to_merge, merged);
         });
     }
 
