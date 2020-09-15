@@ -28,7 +28,7 @@ template <typename T> class queue {
 
   public:
     queue() {}
-    // atomics don't have move constructors,  so had to fake it.
+    // atomics don't have move constructors,  so copy those, move the rest.
     queue(queue &&other) noexcept
         : limit(other.limit), q(std::move(other.q)), q_size(other.q_size.load()),
           eof(other.eof.load()) {

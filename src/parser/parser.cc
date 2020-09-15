@@ -5,7 +5,6 @@
 #include "../engine/sortstmt.hh"
 #include "../engine/to_num_stmt.hh"
 #include "../engine/to_str_stmt.hh"
-#include <fmt/format.h>
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
 #include <vector>

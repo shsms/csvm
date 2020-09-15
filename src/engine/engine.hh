@@ -1,6 +1,7 @@
 #ifndef CSVM_ENGINE_H
 #define CSVM_ENGINE_H
 
+#include "../cli_args.hh"
 #include "../threading/queue.hh"
 #include "stmt.hh"
 #include <algorithm>
@@ -27,7 +28,7 @@ class engine {
     std::vector<tblock> tblocks;
     bool header_set = false;
 
-    int thread_count{}, in_queue_size{}, out_queue_size;
+    const cli_args args;
 
     threading::raw_queue input_queue;
     threading::raw_queue print_queue;
@@ -37,8 +38,7 @@ class engine {
     stmt::exec_order prev_exec_order{stmt::curr_block};
 
   public:
-    engine(int trd_cnt, int in_q_sz, int out_q_sz)
-        : thread_count(trd_cnt), in_queue_size(in_q_sz), out_queue_size(out_q_sz) {}
+    engine(const cli_args &args) : args(args) {}
 
     template <typename T> void new_stmt() {
         curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());

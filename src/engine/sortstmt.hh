@@ -7,7 +7,6 @@
 #include "merge_chunk.hh"
 #include "stmt.hh"
 #include <algorithm>
-#include <fmt/format.h>
 #include <stack>
 #include <stdexcept>
 

@@ -1,6 +1,5 @@
 #include "stmt.hh"
 #include <algorithm>
-#include <fmt/format.h>
 #include <stack>
 #include <stdexcept>
 namespace engine {

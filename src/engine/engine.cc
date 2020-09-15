@@ -205,30 +205,26 @@ void engine::finalize() {
 
     for (auto &block : tblocks) {
         for (auto &s : block.stmts) {
-            s->set_thread_count(thread_count);
+            s->set_thread_count(args.thread_count);
         }
     }
 }
 
 void engine::start() {
-    input_queue.set_limit(in_queue_size);
-    print_queue.set_limit(out_queue_size);
+    input_queue.set_limit(args.in_queue_size);
+    print_queue.set_limit(args.out_queue_size);
 
     print_thread = std::thread([&]() { print_worker(print_queue); });
 
-    if (thread_count < 1) {
-        thread_count = 1;
-    }
-
     if (tblocks.size() == 1) {
         thread_groups.resize(1);
-        for (int ii = 0; ii < thread_count; ii++) {
+        for (int ii = 0; ii < args.thread_count; ii++) {
             thread_groups.front().emplace_back(std::thread(
                 [&]() { entry_exit_worker(input_queue, tblocks.front(), print_queue); }));
         }
     } else {
         thread_groups.resize(tblocks.size());
-        for (int ii = 0; ii < thread_count; ++ii) {
+        for (int ii = 0; ii < args.thread_count; ++ii) {
             thread_groups.front().emplace_back(std::thread(
                 [&]() { entry_worker(input_queue, tblocks.front(), block_queues[0]); }));
             for (auto jj = 0; jj < tblocks.size() - 2; ++jj) {
