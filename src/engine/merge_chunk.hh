@@ -16,8 +16,6 @@ struct merge_row {
     models::row m_row;
 };
 
-namespace stdfs = std::filesystem;
-
 using sorted_rows = std::vector<merge_row>;
 
 class merge_chunk {
@@ -39,6 +37,9 @@ class merge_chunk {
     merge_chunk(sorted_rows &&r) : curr_chunk(std::move(r)) {}
     merge_chunk();
     ~merge_chunk();
+
+    merge_chunk(const merge_chunk &r) = delete;
+    merge_chunk &operator=(const merge_chunk &r) = delete;
 
     merge_chunk(merge_chunk &&r) = default;
     merge_chunk &operator=(merge_chunk &&r) = default;

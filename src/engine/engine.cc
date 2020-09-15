@@ -165,7 +165,8 @@ bool apply(const tblock &block, models::bin_chunk &chunk, std::stack<models::val
 
 std::string engine::string() {
     std::string ret;
-    int bctr = 0, sctr = 0;
+    int bctr = 0;
+    int sctr = 0;
     for (auto &block : tblocks) {
         ++bctr;
         sctr = 0;

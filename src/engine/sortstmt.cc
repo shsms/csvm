@@ -68,7 +68,10 @@ bool sortstmt::apply(models::bin_chunk &chunk, std::stack<models::value> & /*eva
     return true;
 }
 
-void sortstmt::set_thread_count(int c) { barrier.expect(c); }
+void sortstmt::set_thread_count(int c) {
+    thread_count = c;
+    barrier.expect(c);
+}
 
 bool sortstmt::run_worker(threading::bin_queue &in_queue,
                           const std::function<void(models::bin_chunk &)> &forwarder) {
@@ -78,8 +81,7 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
         // TODO: same as number of chunks to merge at a time.
         to_merge.set_limit(50);
         merge_thread = std::thread([this, forwarder]() {
-            int merge_thread_count = 3;
-            merge_worker merger(this->columns, merge_thread_count);
+            merge_worker merger(this->columns, thread_count);
             merger.run(to_merge, merged);
         });
     }

@@ -90,7 +90,7 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     task_queue.set_limit(1);
 
     // start additional workers
-    for (auto ii = 0; ii < thread_count - 1; ii++) { // count current thread as well.
+    for (auto ii = 0; ii < thread_count; ii++) { // count current thread as well.
         additional_workers.emplace_back(std::thread([this, &file_collector]() {
             auto task = this->task_queue.dequeue();
             while (task.has_value()) {

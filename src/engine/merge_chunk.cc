@@ -1,6 +1,9 @@
 #include "merge_chunk.hh"
 
 namespace engine {
+
+namespace stdfs = std::filesystem;
+
 void merge_chunk::check_num_pos(const merge_row &mr) {
     for (int ii = 0; ii < mr.m_row.size(); ++ii) {
         if (std::holds_alternative<double>(mr.m_row[ii])) {
@@ -50,10 +53,7 @@ void merge_chunk::finish_writing() {
 
 bool merge_chunk::empty() {
     if (src == mem) {
-        if (curr_pos >= curr_chunk.size()) {
-            return true;
-        }
-        return false;
+        return curr_pos >= curr_chunk.size();
     }
     if (curr_pos >= curr_chunk.size()) {
         if (fs.eof()) {

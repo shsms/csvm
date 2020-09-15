@@ -31,6 +31,8 @@ class sortstmt : public stmt {
     threading::queue<models::bin_chunk> merged;
     threading::barrier barrier;
 
+    int thread_count{1};
+
   public:
     void add_ident(const std::string &col) override;
     void add_oper(const std::string &oper) override;

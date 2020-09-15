@@ -16,7 +16,7 @@ namespace engine {
 // now.
 
 struct tblock {
-    stmt::exec_order exec_order;
+    stmt::exec_order exec_order{};
     std::vector<std::shared_ptr<stmt>> stmts;
 };
 
