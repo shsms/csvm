@@ -3,23 +3,15 @@
 #include <fmt/format.h>
 #include <stack>
 #include <stdexcept>
-
 namespace engine {
 
-class colsstmt : public stmt {
+class to_str_stmt : public stmt {
   private:
     std::vector<std::string> columns;
     std::vector<int> col_pos;
 
-    bool exclude;
-
-    void set_exclude_header(models::header_row &h);
-
   public:
-    colsstmt();
-
     void add_ident(const std::string &col) override;
-    void add_bang() override;
     std::string string() override;
 
     void set_header(models::header_row &h) override;

@@ -1,17 +1,28 @@
-CC=gcc
 CXX=g++
-CPPFLAGS = -std=c++17 -O3 -Ivendor/PEGTL/include -Ivendor/fmt/include
-LDFLAGS =
 
-#RUN_ARGS = "select(D == 'field5'); !cols(D)"
-RUN_ARGS = " cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);select(type=='q');"
+INCLUDES += -Ivendor/PEGTL/include
+INCLUDES += -Ivendor/fmt/include
+INCLUDES += -Ivendor/CLI11/include
+INCLUDES += -Ivendor/cereal/include
+
+CPPFLAGS = -std=c++17 ${INCLUDES} -O3
+
+LDFLAGS = -lpthread
+
+RUN_ARGS = -n 2 -f tq.csv --chunk_size 1e6
+#SCRIPT = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
+#SCRIPT = "select(type=='q');"
+#SCRIPT = "select(type=='q'); sort(askSz)"
+SCRIPT = "to_num(askSz,bidSz); select(type=='q'); sort(askSz,bidSz); select(askSz > 1000 && bidSz < 1000); sort(arrTm); to_str(askSz,bidSz);"
+#SCRIPT = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
+#SCRIPT = ""
 
 SRCS = $(shell cd src && find * -type f -name '*.cc')
-
 OBJS = $(addprefix build/.objs/,$(subst .cc,.o,$(SRCS)))
 ABS_SRCS = $(addprefix src/,$(SRCS))
+ABS_HEADERS = $(shell find src -type f -name '*.hh')
 PROJECT_ROOT = $(shell pwd)
-TARGET_BIN = bin/csvq
+TARGET_BIN = bin/csvm
 LIBFMT_TGT = build/.libs/fmt/libfmt.a
 LIBS = $(LIBFMT_TGT)
 
@@ -19,14 +30,14 @@ LIBS = $(LIBFMT_TGT)
 
 build: bin $(TARGET_BIN)
 
-clean:
-	rm -rf $(OBJS)
-
 cleanAll: clean
 	rm -rf build bin
 
 run: build
-	@$(TARGET_BIN) $(RUN_ARGS)
+	@$(TARGET_BIN) ${RUN_ARGS} $(SCRIPT)
+
+valgrind: clean build
+	valgrind  --tool=callgrind $(TARGET_BIN) $(RUN_ARGS)
 
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	$(CXX) $(LDFLAGS) -o $@ $^
@@ -34,11 +45,29 @@ $(TARGET_BIN): $(OBJS) $(LIBS)
 bin:
 	mkdir bin
 
-build/.objs/%.mkdir: src/%.cc
-	mkdir -p $(shell dirname $@)
+DEP = $(OBJS:%.o=%.d)
+-include $(DEP)
 
-build/.objs/%.o: src/%.cc src/%.hh build/.objs/%.mkdir vendor/PEGTL/include vendor/fmt/include
-	$(CXX) $(CPPFLAGS) -c -o $@ $<
+build/.objs/%.o: src/%.cc
+	@mkdir -p $(shell dirname $@)
+	$(CXX) $(CPPFLAGS) -MMD -c -o $@ $<
+
+clean:
+	rm -rf $(OBJS) $(DEP)
+
+format:
+	clang-format -i $(ABS_SRCS) $(ABS_HEADERS)
+
+tidy: format
+	clang-tidy --checks=readability-*,performance-*,cppcoreguidelines-*,bugprone-*,misc-* $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
+	make format
+
+check:
+	clang-check -analyze $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
+
+tidy-fix: format
+	clang-tidy --checks=readability-*,performance-*,cppcoreguidelines-*,bugprone-*,misc-* --fix $(ABS_HEADERS) $(ABS_SRCS) -- $(CPPFLAGS)
+	make format
 
 .PRECIOUS: vendor/%/include
 vendor/%/include:

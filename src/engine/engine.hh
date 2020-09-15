@@ -1,38 +1,69 @@
-#ifndef CSVQ_ENGINE_H
-#define CSVQ_ENGINE_H
+#ifndef CSVM_ENGINE_H
+#define CSVM_ENGINE_H
 
+#include "../threading/queue.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <memory>
+#include <stack>
 #include <string>
+#include <thread>
 #include <vector>
 namespace engine {
 
 // TODO: tblock should eventually be a class that has queues to
 // connect to other subsequent tblocks.  Testing only single threaded mode right
 // now.
-using tblock = std::vector<std::shared_ptr<stmt>>;
 
+struct tblock {
+    stmt::exec_order exec_order{};
+    std::vector<std::shared_ptr<stmt>> stmts;
+};
+
+using thread_group = std::vector<std::thread>;
 class engine {
-    std::shared_ptr<stmt> curr_stmt;
+    std::shared_ptr<stmt> curr_stmt; // TODO: is unique_ptr possible here?
     tblock curr_block;
     std::vector<tblock> tblocks;
-    std::string print_buffer;
+    bool header_set = false;
+
+    int thread_count{}, in_queue_size{}, out_queue_size;
+
+    threading::raw_queue input_queue;
+    threading::raw_queue print_queue;
+    std::vector<threading::bin_queue> block_queues;
+    std::vector<thread_group> thread_groups;
+    std::thread print_thread;
+    stmt::exec_order prev_exec_order{stmt::curr_block};
 
   public:
-    void new_cols_stmt();
-    void new_select_stmt();
+    engine(int trd_cnt, int in_q_sz, int out_q_sz)
+        : thread_count(trd_cnt), in_queue_size(in_q_sz), out_queue_size(out_q_sz) {}
+
+    template <typename T> void new_stmt() {
+        curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());
+    }
     void finish_stmt();
-    void add_ident(const std::string &ident);
-    void add_str(const std::string &ident);
+
+    void add_ident(const std::string &);
+    void add_str(const std::string &);
+    void add_num(const std::string &);
     void add_bang();
     void add_oper(const std::string &);
+    void finalize();
 
-    void apply(models::row &row);
+    void start();
     void cleanup();
+    inline auto &get_input_queue() { return input_queue; }
+
     std::string string();
-    void set_header(const models::row &h);
+    bool has_header() const;
+    void set_header(models::header_row &&h);
 };
+
+bool apply(const tblock &, models::row &, std::stack<models::value> &);
+bool apply(const tblock &, models::bin_chunk &, std::stack<models::value> &);
+
 } // namespace engine
 
 #endif

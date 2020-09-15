@@ -1,4 +1,6 @@
 clang
-%cpp -std=c++20
+%cpp -std=c++17
 -Ivendor/PEGTL/include
 -Ivendor/fmt/include
+-Ivendor/CLI11/include
+-Ivendor/cereal/include
