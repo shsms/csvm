@@ -24,8 +24,7 @@ class mergestmt : public stmt {
 
     void set_header(models::header_row &h) override;
     bool apply(models::bin_chunk &chunk, std::stack<models::value> &eval_stack) override;
-    bool run_merge_worker(threading::queue<merge_chunk> &in_queue,
-                          const std::function<void(models::bin_chunk &)> &forwarder);
+    bool run_merge_worker(threading::queue<merge_chunk> &in_queue, threading::bin_queue &merged);
 };
 
 } // namespace engine

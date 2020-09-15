@@ -85,7 +85,7 @@ void mergestmt::merge_and_collect(std::vector<merge_chunk> &chunks, Collector &c
 }
 
 bool mergestmt::run_merge_worker(threading::queue<merge_chunk> &in_queue,
-                                 const std::function<void(models::bin_chunk &)> &forwarder) {
+                                 threading::bin_queue &merged) {
 
     std::vector<merge_chunk> chunks{};
     // TODO: need additional merge levels to ensure there aren't too many files
@@ -125,15 +125,15 @@ bool mergestmt::run_merge_worker(threading::queue<merge_chunk> &in_queue,
         merge_and_collect(chunks, file_collector);
     }
 
-    auto bin_chunk_collector = [chunk = models::bin_chunk{},
-                                &forwarder](merge_row &mr, bool cleanup_only) mutable {
+    auto bin_chunk_collector = [chunk = models::bin_chunk{}, &merged](merge_row &mr,
+                                                                      bool cleanup_only) mutable {
         if (cleanup_only && !chunk.data.empty()) {
-            forwarder(chunk);
+            merged.enqueue(std::move(chunk));
             return;
         }
         if (chunk.data.size() >= 5000) {
             auto next_id = chunk.id + 1;
-            forwarder(chunk);
+            merged.enqueue(std::move(chunk));
             chunk.id = next_id;
             chunk.data.clear();
         }
@@ -144,6 +144,7 @@ bool mergestmt::run_merge_worker(threading::queue<merge_chunk> &in_queue,
     } else {
         merge_and_collect(chunks, bin_chunk_collector);
     }
+    merged.set_eof();
     return true;
 }
 

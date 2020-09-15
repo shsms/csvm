@@ -28,6 +28,7 @@ class sortstmt : public stmt {
     std::atomic<bool> merge_thread_created{false};
     std::thread merge_thread;
     threading::queue<merge_chunk> to_merge;
+    threading::queue<models::bin_chunk> merged;
     threading::barrier barrier;
 
   public:

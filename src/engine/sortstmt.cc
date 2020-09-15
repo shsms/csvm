@@ -75,10 +75,11 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
     bool f = false;
     auto owner = merge_thread_created.compare_exchange_strong(f, true);
     if (owner) {
+        // TODO: same as number of chunks to merge at a time.
         to_merge.set_limit(50);
         merge_thread = std::thread([this, forwarder]() {
             mergestmt mstmt(this->columns);
-            mstmt.run_merge_worker(to_merge, forwarder);
+            mstmt.run_merge_worker(to_merge, merged);
         });
     }
 
@@ -97,6 +98,15 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
     if (owner) {
         barrier.wait();
         to_merge.set_eof();
+    }
+
+    auto merged_chunk = merged.dequeue();
+    while (merged_chunk.has_value()) {
+        forwarder(merged_chunk.value());
+        merged_chunk = merged.dequeue();
+    }
+
+    if (owner) {
         if (merge_thread.joinable()) {
             merge_thread.join();
         }
