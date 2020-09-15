@@ -30,7 +30,7 @@ class engine {
     int thread_count{}, in_queue_size{}, out_queue_size;
 
     threading::raw_queue input_queue;
-    threading::multi_queue print_queue;
+    threading::raw_queue print_queue;
     std::vector<threading::bin_queue> block_queues;
     std::vector<thread_group> thread_groups;
     std::thread print_thread;
