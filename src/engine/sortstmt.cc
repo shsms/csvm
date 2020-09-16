@@ -81,7 +81,7 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
         // TODO: same as number of chunks to merge at a time.
         to_merge.set_limit(50);
         merge_thread = std::thread([this, forwarder]() {
-            merge_worker merger(this->columns, thread_count);
+            merge_worker merger(this->columns, args);
             merger.run(to_merge, merged);
         });
     }

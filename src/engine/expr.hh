@@ -1,6 +1,7 @@
 #ifndef CSVM_EXPR_H
 #define CSVM_EXPR_H
 
+#include "../cli_args.hh"
 #include "expr_tokens.hh"
 #include "stmt.hh"
 #include <stack>
@@ -15,6 +16,7 @@ class expr : public stmt {
     static const std::unordered_map<std::string, int> precedence;
 
   public:
+    expr(const cli_args &args) {}
     void add_ident(const std::string & /*unused*/) override;
     void add_str(const std::string & /*unused*/) override;
     void add_num(const std::string & /*unused*/) override;

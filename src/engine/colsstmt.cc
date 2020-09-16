@@ -2,8 +2,6 @@
 
 namespace engine {
 
-colsstmt::colsstmt() { exclude = false; }
-
 void colsstmt::add_ident(const std::string &col) { columns.push_back(col); }
 
 void colsstmt::add_bang() { exclude = true; }

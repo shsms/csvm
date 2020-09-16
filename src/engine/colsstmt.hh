@@ -1,3 +1,4 @@
+#include "../cli_args.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <stack>
@@ -10,12 +11,13 @@ class colsstmt : public stmt {
     std::vector<std::string> columns;
     std::vector<int> col_pos;
 
-    bool exclude;
+    bool exclude{false};
 
     void set_exclude_header(models::header_row &h);
+    const cli_args args;
 
   public:
-    colsstmt();
+    colsstmt(const cli_args &args) : args(args) {}
 
     void add_ident(const std::string &col) override;
     void add_bang() override;

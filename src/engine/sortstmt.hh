@@ -1,6 +1,7 @@
 #ifndef CSVM_SORTSTMT_HH
 #define CSVM_SORTSTMT_HH
 
+#include "../cli_args.hh"
 #include "../csv/csv.hh"
 #include "../input.hh"
 #include "../threading/barrier.hh"
@@ -31,8 +32,10 @@ class sortstmt : public stmt {
     threading::barrier barrier;
 
     int thread_count{1};
+    const cli_args args;
 
   public:
+    sortstmt(const cli_args &args) : args(args) {}
     void add_ident(const std::string &col) override;
     void add_oper(const std::string &oper) override;
     std::string string() override;

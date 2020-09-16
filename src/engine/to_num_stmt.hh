@@ -1,3 +1,4 @@
+#include "../cli_args.hh"
 #include "stmt.hh"
 #include <algorithm>
 #include <stack>
@@ -11,6 +12,7 @@ class to_num_stmt : public stmt {
     std::vector<int> col_pos;
 
   public:
+    to_num_stmt(const cli_args &args) {}
     void add_ident(const std::string &col) override;
     std::string string() override;
 

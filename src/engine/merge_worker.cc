@@ -94,7 +94,7 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
         additional_workers.emplace_back(std::thread([this, &file_collector]() {
             auto task = this->task_queue.dequeue();
             while (task.has_value()) {
-                merge_chunk target{};
+                merge_chunk target(args);
                 auto file_collector_with_target = [&target, tmp_chunk = sorted_rows{},
                                                    &file_collector](merge_row &mr,
                                                                     bool cleanup_only) mutable {
@@ -117,7 +117,7 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
                 futures.push_back(std::move(p.get_future()));
                 task_queue.enqueue({std::move(chunks), std::move(p)});
             } else {
-                file_chunks.emplace_back(merge_chunk{});
+                file_chunks.emplace_back(merge_chunk(args));
                 auto file_collector_with_target =
                     [&target = file_chunks.back(), tmp_chunk = sorted_rows{},
                      &file_collector](merge_row &mr, bool cleanup_only) mutable {
@@ -131,13 +131,13 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     }
 
     if (!futures.empty() && !chunks.empty()) {
-        file_chunks.emplace_back(merge_chunk());
+        file_chunks.emplace_back(merge_chunk(args));
         if (!additional_workers.empty()) {
             std::promise<merge_chunk> p;
             futures.push_back(std::move(p.get_future()));
             task_queue.enqueue({std::move(chunks), std::move(p)});
         } else {
-            file_chunks.emplace_back(merge_chunk{});
+            file_chunks.emplace_back(merge_chunk(args));
             auto file_collector_with_target =
                 [&target = file_chunks.back(), tmp_chunk = sorted_rows{},
                  &file_collector](merge_row &mr, bool cleanup_only) mutable {

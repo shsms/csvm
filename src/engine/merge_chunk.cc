@@ -12,21 +12,22 @@ void merge_chunk::check_num_pos(const merge_row &mr) {
     }
 }
 
-merge_chunk::merge_chunk() {
+merge_chunk::merge_chunk(const cli_args &args) : args(args) {
     src = disk;
     auto fnum = filenum.fetch_add(1);
-    filename = std::string("tq.csv.") + std::to_string(fnum) + "~";
+    tmp_filename =
+        args.filename + "." + std::to_string(getpid()) + "." + std::to_string(fnum) + "~";
     stdfs::path dir = stdfs::temp_directory_path();
-    filename = dir / filename;
-    fs.open(filename, std::ios::trunc | std::ios::in | std::ios::out | std::ios::binary);
+    tmp_filename = dir / tmp_filename;
+    fs.open(tmp_filename, std::ios::trunc | std::ios::in | std::ios::out | std::ios::binary);
 }
 
 merge_chunk::~merge_chunk() {
     if (fs.is_open()) {
         fs.close();
     }
-    if (stdfs::exists(filename) && curr_pos == 0) {
-        stdfs::remove(filename);
+    if (stdfs::exists(tmp_filename)) {
+        stdfs::remove(tmp_filename);
     }
 }
 
@@ -60,7 +61,7 @@ bool merge_chunk::empty() {
             return true;
         }
         curr_chunk.clear();
-        std::string raw = next_chunk(fs, 1e6);
+        std::string raw = next_chunk(fs, args.chunk_size);
         if (raw.empty()) {
             return true;
         }

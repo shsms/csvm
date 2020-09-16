@@ -41,7 +41,7 @@ class engine {
     engine(const cli_args &args) : args(args) {}
 
     template <typename T> void new_stmt() {
-        curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>());
+        curr_stmt = std::static_pointer_cast<stmt>(std::make_shared<T>(args));
     }
     void finish_stmt();
 

@@ -9,11 +9,11 @@ CPPFLAGS = -std=c++17 ${INCLUDES} -O3
 
 LDFLAGS = -lpthread
 
-RUN_ARGS = -n 4 -f tq.csv --chunk_size 1e6
+RUN_ARGS = -n 2 -f tq-01.csv --chunk_size 1e6
 #SCRIPT = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz)"
-SCRIPT = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz); sort(trdSz, trdTm);"
+#SCRIPT = "to_num(trdSz); select(type=='t' && arrTm >= '150000' && trdSz >= 400 && trdSz < 1500); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);to_str(trdSz); sort(trdSz, trdTm);"
 #SCRIPT = "select(type=='q');"
-#SCRIPT = "select(type=='q'); sort(askSz)"
+SCRIPT = "select(type=='q'); sort(askSz)"
 #SCRIPT = "to_num(askSz,bidSz); select(type=='q'); sort(askSz,bidSz); select(askSz > 1000 && bidSz < 1000); sort(arrTm); to_str(askSz,bidSz);"
 #SCRIPT = "select(type=='t' && arrTm >= '150000'); cols(date,arrTm,ticker,type,trdPx,trdSz,trdTm);"
 #SCRIPT = ""

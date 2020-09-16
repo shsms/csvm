@@ -1,6 +1,7 @@
 #ifndef CSVM_MERGE_CHUNK_HH
 #define CSVM_MERGE_CHUNK_HH
 
+#include "../cli_args.hh"
 #include "../csv/csv.hh"
 #include "../input.hh"
 #include "../models/models.hh"
@@ -22,7 +23,7 @@ class merge_chunk {
     enum { mem, disk } src{mem};
     sorted_rows curr_chunk;
 
-    std::string filename;
+    std::string tmp_filename;
     std::fstream fs;
     int curr_pos{},      // curr_pos in curr_block.
         curr_chunk_id{}; // to pick next row from, while merging.  known only at
@@ -32,10 +33,11 @@ class merge_chunk {
     std::vector<int> num_pos;
 
     void check_num_pos(const merge_row &mr);
+    cli_args args;
 
   public:
     merge_chunk(sorted_rows &&r) : curr_chunk(std::move(r)) {}
-    merge_chunk();
+    merge_chunk(const cli_args &args);
     ~merge_chunk();
 
     merge_chunk(const merge_chunk &r) = delete;
