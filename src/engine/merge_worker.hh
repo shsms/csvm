@@ -11,7 +11,6 @@ class merge_worker {
   private:
     int curr_pos{};
     std::vector<sortspec> columns;
-    int thread_count{1};
 
     struct merge_task {
         std::vector<merge_chunk> chunks;

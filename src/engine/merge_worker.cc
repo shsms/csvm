@@ -90,7 +90,7 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     task_queue.set_limit(1);
 
     // start additional workers
-    for (auto ii = 0; ii < thread_count; ii++) { // count current thread as well.
+    for (auto ii = 0; ii < args.thread_count; ii++) { // count current thread as well.
         additional_workers.emplace_back(std::thread([this, &file_collector]() {
             auto task = this->task_queue.dequeue();
             while (task.has_value()) {
@@ -111,7 +111,7 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         // if too many in-mem chunks,  merge them and collect to tmp file.
-        if (chunks.size() >= 50) {
+        if (chunks.size() >= 16) {
             if (!additional_workers.empty()) {
                 std::promise<merge_chunk> p;
                 futures.push_back(std::move(p.get_future()));

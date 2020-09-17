@@ -211,8 +211,9 @@ void engine::finalize() {
 }
 
 void engine::start() {
-    input_queue.set_limit(args.in_queue_size);
-    print_queue.set_limit(args.out_queue_size);
+    // TODO: use narrow info from thread-distributor once it is ready.
+    input_queue.set_limit(args.thread_count);
+    print_queue.set_limit(args.thread_count);
 
     print_thread = std::thread([&]() { print_worker(print_queue); });
 

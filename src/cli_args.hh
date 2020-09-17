@@ -7,8 +7,6 @@ struct cli_args {
     std::string filename;
     std::string script;
     int thread_count{1};
-    int in_queue_size{};
-    int out_queue_size{};
     double chunk_size{1e6};
     bool print_engine{false};
 };
