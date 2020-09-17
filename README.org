@@ -1,0 +1,65 @@
+#+startup: indent showall
+
+* csvm
+csvm is a multithreaded csv manipulation tool written in C++.
+
+* Current status
+- Needs a C++17 compiler.
+- I've only tried it on a single 1.5GB csv file (or subsets of it),  so it may or may not work with your file.  
+- It currently doesn't have unit tests.
+- Currently needs file input, and always prints to stdout, stdin and file-output support will be added later.
+- Tested on Fedora and Manjaro,  but should run on most Linux based OS,  might need some changes to be able to run on other OS.
+- Currently needs explicit to_num and to_str conversions for numeric comparisons or numeric sort, will be improved later.
+* Features
+It only a few things it can do on csv files currently,  but adding additional features should be straight forward.  The commands it has currently are:
+- cols :: to rearrange the columns in the file.
+- select :: to keep some of the rows based on some criteria and filter out the rest.
+- sort :: to sort the file based on some conditions.
+
+You can provide multiple commands in a single run of csvm.  It currently expects the first line of the file to be a header line.  Later there might be a command to specify it.
+* Build instructions
+- checkout using:
+#+begin_src bash
+git clone https://github.com/shsms/csvm.git && cd csvm
+#+end_src
+- init submodules (currently CLI11 for parsing cli args and PEGTL for parsing commands and csv files.)
+#+begin_src bash
+make init
+#+end_src
+- build using
+#+begin_src bash
+make
+#+end_src
+- install to [[https://www.freedesktop.org/software/systemd/man/file-hierarchy.html#~/.local/bin/][local bin]] directory. (depends on systemd)
+#+begin_src bash
+make install
+#+end_src
+* Usage examples
+- Keep only these columns in this order, drop the rest:
+#+begin_src bash
+csvm -f input.csv "cols(id, fieldA, countZ)"
+#+end_src
+- Drop these columns, keep the rest:
+#+begin_src bash
+csvm -f input.csv "!cols(fieldA)"
+#+end_src
+- Keep only rows that match criteria:
+#+begin_src bash
+csvm -f input.csv "select(fieldA == 't' && countZ != '0')"
+#+end_src
+- For numeric comparisons:
+#+begin_src bash
+csvm -f input.csv "to_num(countA, countZ); select(fieldA == 't' && (countZ > 0 || countA > 0)); to_str(countA, countZ);"
+#+end_src
+- Filter by a field,  then drop that field:
+#+begin_src bash
+csvm -f input.csv "select(fieldA == 't'); !cols(fieldA)"
+#+end_src
+- filter by a field, forward sort by 'fieldA', reverse sort by 'fieldB':
+#+begin_src bash
+csvm -f input.csv "select(fieldA != 't'); sort(fieldA, fieldB:r)"
+#+end_src
+- numeric filter and numeric reverse sort:
+#+begin_src bash
+csvm -f input.csv "to_num(countA); select(countA > 0); sort(countA:r); to_str(countA)"
+#+end_src

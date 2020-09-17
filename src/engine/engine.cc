@@ -7,6 +7,7 @@ namespace engine {
 
 void entry_exit_worker(threading::raw_queue &queue, const tblock &block,
                        threading::raw_queue &print_queue) {
+    pthread_setname_np(pthread_self(), "csvm_entry_exit");
     std::stack<models::value> tmp_eval_stack;
     std::string print_buffer;
     auto chunk = queue.dequeue();
@@ -24,6 +25,7 @@ void entry_exit_worker(threading::raw_queue &queue, const tblock &block,
 
 void entry_worker(threading::raw_queue &in_queue, const tblock &block,
                   threading::bin_queue &out_queue) {
+    pthread_setname_np(pthread_self(), "csvm_entry");
     std::stack<models::value> tmp_eval_stack;
     models::bin_chunk out_chunk;
     auto in_chunk = in_queue.dequeue();
@@ -42,6 +44,7 @@ void entry_worker(threading::raw_queue &in_queue, const tblock &block,
 
 void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
                          threading::bin_queue &out_queue) {
+    pthread_setname_np(pthread_self(), "csvm_middle");
     // TODO: make forwarder move-only
     auto forwarder = [&out_queue](models::bin_chunk &c) { out_queue.enqueue(std::move(c)); };
     if (block.exec_order == stmt::sep_block && block.stmts[0]->run_worker(in_queue, forwarder)) {
@@ -65,6 +68,7 @@ void intermediate_worker(threading::bin_queue &in_queue, const tblock &block,
 
 void exit_worker(threading::bin_queue &in_queue, const tblock &block,
                  threading::raw_queue &print_queue) {
+    pthread_setname_np(pthread_self(), "csvm_exit");
     std::string print_buffer;
 
     auto forwarder = [&print_queue, &print_buffer](models::bin_chunk &c) {
@@ -94,6 +98,8 @@ void exit_worker(threading::bin_queue &in_queue, const tblock &block,
 }
 
 void print_worker(threading::queue<models::raw_chunk> &queue) {
+    pthread_setname_np(pthread_self(), "csvm_print");
+
     int next = 0;
     std::unordered_map<int, std::string> items;
 

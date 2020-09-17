@@ -49,7 +49,6 @@ void merge_worker::merge_and_collect(std::vector<merge_chunk> chunks, Collector 
 }
 
 bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_queue &merged) {
-
     std::vector<merge_chunk> chunks{};
     // TODO: need additional merge levels to ensure there aren't too many files
     // to merge at the same time.
@@ -90,9 +89,10 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     task_queue.set_limit(1);
 
     // start additional workers
-    for (auto ii = 0; ii < args.thread_count; ii++) { // count current thread as well.
+    for (auto ii = 0; ii < args.thread_count + 1; ii++) { // count current thread as well.
         additional_workers.emplace_back(std::thread([this, &file_collector]() {
             auto task = this->task_queue.dequeue();
+	    pthread_setname_np(pthread_self(), "csvm_merge_tmp");
             while (task.has_value()) {
                 merge_chunk target(args);
                 auto file_collector_with_target = [&target, tmp_chunk = sorted_rows{},
@@ -111,7 +111,7 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         // if too many in-mem chunks,  merge them and collect to tmp file.
-        if (chunks.size() >= 64) {
+        if (chunks.size() >= 32) {
                 std::promise<merge_chunk> p;
                 futures.push_back(std::move(p.get_future()));
                 task_queue.enqueue({std::move(chunks), std::move(p)});

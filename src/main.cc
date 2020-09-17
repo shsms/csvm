@@ -33,6 +33,8 @@ int main(int argc, char *argv[]) {
 
     e.start();
 
+    pthread_setname_np(pthread_self(), "csvm_input");
+
     auto &input_queue = e.get_input_queue();
 
     for (int chunk_id = 0; !file.eof(); ++chunk_id) {
