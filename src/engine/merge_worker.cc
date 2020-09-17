@@ -111,20 +111,10 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     auto in_chunk = in_queue.dequeue();
     while (in_chunk.has_value()) {
         // if too many in-mem chunks,  merge them and collect to tmp file.
-        if (chunks.size() >= 16) {
-            if (!additional_workers.empty()) {
+        if (chunks.size() >= 64) {
                 std::promise<merge_chunk> p;
                 futures.push_back(std::move(p.get_future()));
                 task_queue.enqueue({std::move(chunks), std::move(p)});
-            } else {
-                file_chunks.emplace_back(merge_chunk(args));
-                auto file_collector_with_target =
-                    [&target = file_chunks.back(), tmp_chunk = sorted_rows{},
-                     &file_collector](merge_row &mr, bool cleanup_only) mutable {
-                        file_collector(target, tmp_chunk, mr, cleanup_only);
-                    };
-                merge_and_collect(std::move(chunks), file_collector_with_target);
-            }
         }
         chunks.emplace_back(std::move(in_chunk.value()));
         in_chunk = in_queue.dequeue();
@@ -132,19 +122,9 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
 
     if (!futures.empty() && !chunks.empty()) {
         file_chunks.emplace_back(merge_chunk(args));
-        if (!additional_workers.empty()) {
             std::promise<merge_chunk> p;
             futures.push_back(std::move(p.get_future()));
             task_queue.enqueue({std::move(chunks), std::move(p)});
-        } else {
-            file_chunks.emplace_back(merge_chunk(args));
-            auto file_collector_with_target =
-                [&target = file_chunks.back(), tmp_chunk = sorted_rows{},
-                 &file_collector](merge_row &mr, bool cleanup_only) mutable {
-                    file_collector(target, tmp_chunk, mr, cleanup_only);
-                };
-            merge_and_collect(std::move(chunks), file_collector_with_target);
-        }
     }
 
     task_queue.set_eof();
@@ -158,7 +138,6 @@ bool merge_worker::run(threading::queue<merge_chunk> &in_queue, threading::bin_q
     for (auto &f : futures) {
         file_chunks.emplace_back(std::move(f.get()));
     }
-    //    std::cerr << "file_chunks.size() : " << file_chunks.size() << '\n';
 
     // do final merge, using the out_collector
     if (!file_chunks.empty()) {

@@ -79,7 +79,7 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
     auto owner = merge_thread_created.compare_exchange_strong(f, true);
     if (owner) {
         // TODO: same as number of chunks to merge at a time.
-        to_merge.set_limit(50);
+        to_merge.set_limit(64);
         merge_thread = std::thread([this, forwarder]() {
             merge_worker merger(this->columns, args);
             merger.run(to_merge, merged);
