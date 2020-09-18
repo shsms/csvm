@@ -176,10 +176,10 @@ std::string engine::string() {
     for (auto &block : tblocks) {
         ++bctr;
         sctr = 0;
-        ret += "\nblock: " + std::to_string(bctr) +
-               ". exec_order: " + std::to_string(block.exec_order) + "\n";
+        ret += "\nstage: " + std::to_string(bctr) +
+               " (exec_order: " + std::to_string(block.exec_order) + ")\n";
         for (auto &s : block.stmts) {
-            ret += std::to_string(bctr) + "." + std::to_string(++sctr) + ". " + s->string();
+            ret += std::to_string(bctr) + "." + std::to_string(++sctr) + " " + s->string();
         }
     }
     return ret;

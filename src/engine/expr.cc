@@ -84,7 +84,7 @@ std::string expr::string() {
     for (const auto &step : stack) {
         ret += step->string() + " ";
     }
-    ret += "\n\n";
+    ret += "\n";
     return ret;
 }
 

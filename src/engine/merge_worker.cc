@@ -1,6 +1,5 @@
 #include "merge_worker.hh"
 #include <future>
-#include <memory_resource>
 
 namespace engine {
 

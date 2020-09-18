@@ -63,3 +63,49 @@ csvm -f input.csv "select(fieldA != 't'); sort(fieldA, fieldB:r)"
 #+begin_src bash
 csvm -f input.csv "to_num(countA); select(countA > 0); sort(countA:r); to_str(countA)"
 #+end_src
+* Threading
+At the moment,  asking csvm to use additional threads is straight forward only when you are not using sort.  For example,
+
+#+begin_src bash
+csvm -n 4 -f input.csv "select(fieldA == 't'); !cols(fieldA)"
+#+end_src
+
+would use 4 threads to do the actual work. (there's also the input and output threads - those don't use a lot of CPU,  they are there just to synchronize the worker threads.)
+
+sort commands run in their own separate threads.  When you add -n 4,  sort creates 4 new threads to sort and for large input files(>32MB),  it uses 4 additional threads to save to/retrieve from tmp files.
+
+So the below command would have 12 active threads:
+#+begin_src bash
+csvm -n 4 -f input.csv "cols(fieldA); sort(fieldB);"
+#+end_src
+
+When using just the sort command,  csvm would still use 12 threads,  the first 4 will be used just for parsing the input csv into internal representation.
+
+This will change, optimizing for the given number of threads will come later.
+
+The =--print-engine= argument would display the stages csvm would use.  For example,  this command:
+
+#+begin_src bash
+bin/csvm --print-engine -n 4 -f input.csv 'to_num(colA); sort(colA); select(colB == "t"); to_str(colA);'
+#+end_src
+
+would print:
+
+#+begin_src bash
+stage: 1 (exec_order: 0)
+1.1 to_num:
+        5 : colA
+
+stage: 2 (exec_order: 2)
+2.1 sort:
+        5 : colA
+
+stage: 3 (exec_order: 0)
+3.1 select:
+        colB t ==
+
+3.2 to_str:
+        5 : colA
+#+end_src
+
+(5 is the position of colA in the input file.)
