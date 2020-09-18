@@ -8,6 +8,7 @@
 #include <atomic>
 #include <filesystem>
 #include <fstream>
+#include <future>
 
 namespace engine {
 
@@ -18,6 +19,13 @@ struct merge_row {
 };
 
 using sorted_rows = std::vector<merge_row>;
+
+struct fetch_file_chunk_task {
+    std::reference_wrapper<std::fstream> fs;
+    double max_chunk_size;
+    std::promise<sorted_rows> promise;
+    std::vector<int> num_pos;
+};
 
 class merge_chunk {
     enum { mem, disk } src{mem};
@@ -34,10 +42,16 @@ class merge_chunk {
 
     void check_num_pos(const merge_row &mr);
     cli_args args;
+    std::optional<std::future<sorted_rows>> fut_chunk;
+
+    std::optional<std::reference_wrapper<threading::queue<fetch_file_chunk_task>>> fetch_task_queue;
 
   public:
+    // constructor for in-mem mode.
     merge_chunk(sorted_rows &&r) : curr_chunk(std::move(r)) {}
-    merge_chunk(const cli_args &args);
+
+    // constructor for tmp-file mode.
+    merge_chunk(const cli_args &args, threading::queue<fetch_file_chunk_task> &fetch_task_queue);
     ~merge_chunk();
 
     merge_chunk(const merge_chunk &r) = delete;

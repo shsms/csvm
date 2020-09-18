@@ -82,7 +82,7 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
         // TODO: same as number of chunks to merge at a time.
         to_merge.set_limit(64);
         merge_thread = std::thread([this, forwarder]() {
-	    pthread_setname_np(pthread_self(), "csvm_merge");
+            pthread_setname_np(pthread_self(), "csvm_merge");
             merge_worker merger(this->columns, args);
             merger.run(to_merge, merged);
         });

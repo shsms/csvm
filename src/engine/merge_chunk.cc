@@ -12,7 +12,9 @@ void merge_chunk::check_num_pos(const merge_row &mr) {
     }
 }
 
-merge_chunk::merge_chunk(const cli_args &args) : args(args) {
+merge_chunk::merge_chunk(const cli_args &args,
+                         threading::queue<fetch_file_chunk_task> &fetch_task_queue)
+    : args(args), fetch_task_queue(fetch_task_queue) {
     src = disk;
     auto fnum = filenum.fetch_add(1);
     tmp_filename =
@@ -57,28 +59,22 @@ bool merge_chunk::empty() {
         return curr_pos >= curr_chunk.size();
     }
     if (curr_pos >= curr_chunk.size()) {
-        if (fs.eof()) {
-            return true;
-        }
         curr_chunk.clear();
-        std::string raw = next_chunk(fs, args.chunk_size);
-        if (raw.empty()) {
+        if (!fut_chunk.has_value()) {
+            std::promise<sorted_rows> promise;
+            fut_chunk = std::move(promise.get_future());
+            fetch_task_queue->get().enqueue(
+                {std::ref(fs), args.chunk_size, std::move(promise), num_pos});
+        }
+        curr_chunk = std::move(fut_chunk->get());
+        if (curr_chunk.empty()) {
             return true;
         }
-
-        csv::parse_body(models::raw_chunk{curr_chunk_id, raw}, [this](models::row &row) {
-            auto orig_id_str = std::get<std::string>(row.back());
-            auto orig_id = std::stoi(orig_id_str);
-            row.pop_back();
-            if (row.empty()) {
-                return;
-            }
-            for (const auto &num_item : num_pos) {
-                models::to_num(row[num_item]);
-            }
-            this->curr_chunk.emplace_back(merge_row{orig_id, 0, row});
-        });
         curr_pos = 0;
+        std::promise<sorted_rows> promise;
+        fut_chunk = std::move(promise.get_future());
+        fetch_task_queue->get().enqueue(
+            {std::ref(fs), args.chunk_size, std::move(promise), num_pos});
     }
     return false;
 }
