@@ -2,3 +2,4 @@ clang
 %cpp -std=c++17
 -Ivendor/PEGTL/include
 -Ivendor/CLI11/include
+-Ivendor/Catch2/single_include

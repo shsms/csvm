@@ -1,9 +1,9 @@
 [submodule "vendor/PEGTL"]
 	path = vendor/PEGTL
 	url = https://github.com/taocpp/PEGTL
-[submodule "vendor/flatbuffers"]
-	path = vendor/flatbuffers
-	url = https://github.com/google/flatbuffers
 [submodule "vendor/CLI11"]
 	path = vendor/CLI11
 	url = https://github.com/CLIUtils/CLI11
+[submodule "vendor/Catch2"]
+	path = vendor/Catch2
+	url = https://github.com/catchorg/Catch2.git

@@ -28,13 +28,13 @@ template <typename T> class queue {
 
   public:
     queue() {}
-    // atomics don't have move constructors,  so copy those, move the rest.
+
+    // don't move after first use.
     queue(queue &&other) noexcept
         : limit(other.limit), q(std::move(other.q)), q_size(other.q_size.load()),
-          eof(other.eof.load()) {
-        q_size = 0;
-        eof = false;
-    }
+          eof(other.eof.load()) {}
+
+    // TODO: move to constructor and remove set_limit method.
     void set_limit(int lim) { limit = lim; }
 
     auto enqueue(T &&item) {

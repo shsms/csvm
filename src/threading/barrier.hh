@@ -1,5 +1,5 @@
-#ifndef CSVM_WAITGROUP_HH
-#define CSVM_WAITGROUP_HH
+#ifndef CSVM_BARRIER_HH
+#define CSVM_BARRIER_HH
 
 #include "locks.hh"
 #include <atomic>
@@ -30,4 +30,4 @@ class barrier {
 };
 } // namespace threading
 
-#endif /* CSVM_WAITGROUP_HH */
+#endif /* CSVM_BARRIER_HH */
