@@ -58,7 +58,7 @@ class engine {
 
     std::string string();
     bool has_header() const;
-    void set_header(models::header_row &&h);
+    void set_header(models::header_row &&h) noexcept;
 };
 
 bool apply(const tblock &, models::row &, std::stack<models::value> &);

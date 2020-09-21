@@ -48,7 +48,7 @@ class merge_chunk {
 
   public:
     // constructor for in-mem mode.
-    merge_chunk(sorted_rows &&r) : curr_chunk(std::move(r)) {}
+    merge_chunk(sorted_rows &&r) noexcept : curr_chunk(std::move(r)) {}
 
     // constructor for tmp-file mode.
     merge_chunk(const cli_args &args, threading::queue<fetch_file_chunk_task> &fetch_task_queue);
@@ -57,8 +57,8 @@ class merge_chunk {
     merge_chunk(const merge_chunk &r) = delete;
     merge_chunk &operator=(const merge_chunk &r) = delete;
 
-    merge_chunk(merge_chunk &&r) = default;
-    merge_chunk &operator=(merge_chunk &&r) = default;
+    merge_chunk(merge_chunk &&r) noexcept = default;
+    merge_chunk &operator=(merge_chunk &&r) noexcept = default;
 
     inline void set_curr_chunk_id(int c) { curr_chunk_id = c; }
 

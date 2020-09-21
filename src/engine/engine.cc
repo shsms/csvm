@@ -185,7 +185,7 @@ std::string engine::string() {
     return ret;
 };
 
-void engine::set_header(models::header_row &&h) {
+void engine::set_header(models::header_row &&h) noexcept {
     header_set = true;
     for (auto &block : tblocks) {
         for (auto &s : block.stmts) {
