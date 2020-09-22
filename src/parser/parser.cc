@@ -206,9 +206,9 @@ template <> struct action<pgm> {
 };
 
 void run(const std::string &program, engine::engine &e) {
-    if (analyze<pgm>() != 0) {
-        throw std::runtime_error("analyze failed");
-    }
+    // if (analyze<pgm>() != 0) {
+    //     throw std::runtime_error("analyze failed");
+    // }
 
     auto inp = string_input(program, "input");
     parse<pgm, action, control>(inp, e);
