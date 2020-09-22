@@ -18,7 +18,7 @@ TEST_CASE("parser", "[parser::run]") {
     
     parser::run("to_num(cc); select(cc >= 0 && (B == 't' || D == 't')); !cols(B, D); sort(cc, aa:r); to_str(cc)", e);
     e.finalize();
-    REQUIRE(e.string() == R"(
+    REQUIRE((e.string() == R"(
 stage: 1 (exec_order: 0)
 1.1 to_num:
 	cc
@@ -37,5 +37,5 @@ stage: 2 (exec_order: 2)
 stage: 3 (exec_order: 0)
 3.1 to_str:
 	cc
-)");
+)"));
 }
