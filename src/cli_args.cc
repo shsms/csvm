@@ -10,9 +10,7 @@ cli_args parse_args(int argc, char *argv[]) {
     CLI::App app;
 
     app.add_option("-f", args.filename,
-                   "csv filename, required until next_stdin_chunk is implemented")
-        ->required()
-        ->check(CLI::ExistingFile);
+                   "csv filename, required until next_stdin_chunk is implemented");
     app.add_option("script", args.script, "script to execute")->required();
     app.add_option("-t,--temp-dir", args.temp_dir,
                    std::string("dir to create tmp files in.  Default is ") +
@@ -38,6 +36,9 @@ cli_args parse_args(int argc, char *argv[]) {
     }
     if (args.temp_dir == "") {
         args.temp_dir = stdfs::temp_directory_path().string();
+    }
+    if (args.filename == "") {
+	args.filename = "/dev/stdin";
     }
 
     return args;

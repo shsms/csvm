@@ -17,8 +17,9 @@ merge_chunk::merge_chunk(const cli_args &args,
     : args(args), fetch_task_queue(fetch_task_queue) {
     src = disk;
     auto fnum = filenum.fetch_add(1);
-    tmp_filename =
-        args.filename + "." + std::to_string(getpid()) + "." + std::to_string(fnum) + "~";
+    tmp_filename = args.filename;
+    std::replace(tmp_filename.begin(), tmp_filename.end(), '/', '.');
+    tmp_filename += "." + std::to_string(getpid()) + "." + std::to_string(fnum) + "~";
 
     tmp_filename = stdfs::path(args.temp_dir) / tmp_filename;
     fs.open(tmp_filename, std::ios::trunc | std::ios::in | std::ios::out | std::ios::binary);
