@@ -79,8 +79,7 @@ bool sortstmt::run_worker(threading::bin_queue &in_queue,
     bool f = false;
     auto owner = merge_thread_created.compare_exchange_strong(f, true);
     if (owner) {
-        // TODO: same as number of chunks to merge at a time.
-        to_merge.set_limit(8);
+        to_merge.set_limit(args.thread_count);
         merge_thread = std::thread([this, forwarder]() {
             pthread_setname_np(pthread_self(), "csvm_merge");
             merge_worker merger(this->columns, args);

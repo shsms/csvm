@@ -6,6 +6,7 @@
 struct cli_args {
     std::string filename;
     std::string script;
+    std::string temp_dir;
     int thread_count{1};
     double chunk_size{1e6};
     bool print_engine{false};

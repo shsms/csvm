@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 #include "parser.hh"
+#include "../csv/csv.hh"
 
 TEST_CASE("parser", "[parser::run]") {
     cli_args args;
@@ -16,12 +17,15 @@ TEST_CASE("parser", "[parser::run]") {
 
     REQUIRE(parse_failure);
     
-    parser::run("to_num(cc); select(cc >= 0 && (B == 't' || D == 't')); !cols(B, D); sort(cc, aa:r); to_str(cc)", e);
+    parser::run("to_num(cc); select(cc >= 0 && (B == 't' || D == 't')); !cols(B, D); sort(cc, aa:r); to_str(cc); cols(aa, bb, cc);", e);
     e.finalize();
-    REQUIRE((e.string() == R"(
+
+    e.set_header(csv::parse_header("A,B,C,D,aa,bb,cc"));
+
+    REQUIRE(e.string() == R"(
 stage: 1 (exec_order: 0)
 1.1 to_num:
-	cc
+	6 : cc
 1.2 select:
 	cc 0 >= B t == D t == || && 
 
@@ -31,11 +35,15 @@ stage: 1 (exec_order: 0)
 
 stage: 2 (exec_order: 2)
 2.1 sort:
-	0 : cc
-	0 : aa(descending)
+	4 : cc
+	2 : aa(descending)
 
 stage: 3 (exec_order: 0)
 3.1 to_str:
-	cc
-)"));
+	4 : cc
+3.2 cols:keep:
+	2 : aa
+	3 : bb
+	4 : cc
+)");
 }

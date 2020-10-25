@@ -27,6 +27,8 @@ struct bin_chunk {
 struct col_header {
     std::string name;
     // TODO: add rename/alias info
+
+    bool operator==(const col_header &other) const { return name == other.name; }
 };
 
 using header_row = std::vector<col_header>;

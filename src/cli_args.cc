@@ -2,6 +2,8 @@
 #include <CLI/CLI.hpp>
 #include <cstdlib>
 
+namespace stdfs = std::filesystem;
+
 cli_args parse_args(int argc, char *argv[]) {
     cli_args args;
 
@@ -12,6 +14,9 @@ cli_args parse_args(int argc, char *argv[]) {
         ->required()
         ->check(CLI::ExistingFile);
     app.add_option("script", args.script, "script to execute")->required();
+    app.add_option("-t,--temp-dir", args.temp_dir,
+                   std::string("dir to create tmp files in.  Default is ") +
+                       stdfs::temp_directory_path().string());
     app.add_option("-n", args.thread_count, "number of threads, defaults to 1");
     app.add_option("--chunk_size", args.chunk_size,
                    "size in bytes of each input chunk, defaults to 1e6");
@@ -30,6 +35,9 @@ cli_args parse_args(int argc, char *argv[]) {
     }
     if (args.thread_count <= 0) {
         args.thread_count = 1;
+    }
+    if (args.temp_dir == "") {
+        args.temp_dir = stdfs::temp_directory_path().string();
     }
 
     return args;

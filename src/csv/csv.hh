@@ -66,6 +66,8 @@ template <> struct action<line> {
     }
 };
 
+// parse_body parses each row, constructs a models::row object, and passes it as a non-const
+// reference to proc_fn:  [](models::row&) {...}.
 template <typename F> inline void parse_body(models::raw_chunk &&chunk, F proc_fn) {
     csv csv(proc_fn);
     tao::pegtl::string_input in(std::move(chunk.data), "csv");
