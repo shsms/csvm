@@ -4,7 +4,8 @@
 #include <string>
 
 struct cli_args {
-    std::string filename;
+    std::string in_filename;
+    std::string out_filename;
     std::string script;
     std::string temp_dir;
     int thread_count{1};

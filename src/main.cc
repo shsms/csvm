@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 
     engine::engine e(args);
     parser::run(args.script, e);
-    auto file = std::fstream(args.filename, std::ios::in | std::ios::binary);
+    auto file = std::fstream(args.in_filename, std::ios::in | std::ios::binary);
     e.finalize();
 
     if (!e.has_header()) {
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     e.start();
 
-    pthread_setname_np(pthread_self(), "csvm_input");
+    pthread_setname_np(pthread_self(), "csvm_main");
 
     auto &input_queue = e.get_input_queue();
 

@@ -98,7 +98,9 @@ bool expr::apply(models::row &row, std::stack<models::value> &eval_stack) {
     for (const auto &step : steps) {
         step->apply(row, eval_stack);
     }
-    return std::get<bool>(eval_stack.top());
+    auto retval = std::get<bool>(eval_stack.top());
+    eval_stack.pop();
+    return retval;
 }
 
 } // namespace engine::expr

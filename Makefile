@@ -42,6 +42,9 @@ cleanAll: clean
 valgrind: clean build
 	valgrind  --tool=callgrind $(TARGET_BIN) $(RUN_ARGS)
 
+memusage: build
+	valgrind --tool=massif $(TARGET_BIN) -o outq.csv -f tq-01.csv "select(type=='q'); sort(askSz)"
+
 $(TARGET_BIN): $(OBJS) $(LIBS)
 	$(CXX) $(LDFLAGS) -o $@ $^
 

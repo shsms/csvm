@@ -31,7 +31,7 @@ class engine {
     const cli_args args;
 
     threading::raw_queue input_queue;
-    threading::raw_queue print_queue;
+    threading::raw_queue output_queue;
     std::vector<threading::bin_queue> block_queues;
     std::vector<thread_group> thread_groups;
     std::thread print_thread;

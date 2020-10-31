@@ -1,6 +1,7 @@
 #include "engine.hh"
 #include "../csv/csv.hh"
 #include "../models/models.hh"
+#include <fstream>
 #include <iostream>
 
 namespace engine {
@@ -97,19 +98,21 @@ void exit_worker(threading::bin_queue &in_queue, const tblock &block,
     }
 }
 
-void print_worker(threading::queue<models::raw_chunk> &queue) {
-    pthread_setname_np(pthread_self(), "csvm_print");
+void output_worker(threading::queue<models::raw_chunk> &queue, const std::string &out_filename) {
+    pthread_setname_np(pthread_self(), "csvm_output");
 
-    int next = 0;
+    std::ofstream fs;
+    fs.open(out_filename, std::ios::trunc | std::ios::out | std::ios::binary);
+
+    int next = -1; // chunk number -1 is the header.
     std::unordered_map<int, std::string> items;
-
     auto chunk = queue.dequeue();
     while (chunk.has_value()) {
         if (chunk->id == next) {
-            std::cout << chunk->data;
+            fs.write(chunk->data.c_str(), chunk->data.length());
             ++next;
             while (items.count(next) > 0) {
-                std::cout << items.at(next);
+                fs.write(items.at(next).c_str(), items.at(next).length());
                 // TODO:  reusing strings helps avoid reallocation
                 // probably has an impact only in super large files.
                 items.erase(next);
@@ -130,6 +133,7 @@ void engine::finish_stmt() {
         curr_block.exec_order = exec_order;
         curr_block.stmts.emplace_back(curr_stmt);
         block_queues.emplace_back(threading::bin_queue{});
+        block_queues.back().set_limit(args.thread_count);
     } else if (exec_order == stmt::curr_block) {
         curr_block.exec_order = exec_order;
         curr_block.stmts.emplace_back(curr_stmt);
@@ -201,7 +205,7 @@ void engine::set_header(models::header_row &&h) noexcept {
         }
     }
     buffer += "\n";
-    std::cout << buffer;
+    output_queue.enqueue(models::raw_chunk{-1, buffer});
 }
 
 bool engine::has_header() const { return header_set; }
@@ -219,15 +223,15 @@ void engine::finalize() {
 void engine::start() {
     // TODO: use narrow info from thread-distributor once it is ready.
     input_queue.set_limit(args.thread_count);
-    print_queue.set_limit(args.thread_count);
+    output_queue.set_limit(args.thread_count);
 
-    print_thread = std::thread([&]() { print_worker(print_queue); });
+    print_thread = std::thread([&]() { output_worker(output_queue, args.out_filename); });
 
     if (tblocks.size() == 1) {
         thread_groups.resize(1);
-        for (int ii = 0; ii < args.thread_count; ii++) {
+        for (int ii = 0; ii < args.thread_count; ++ii) {
             thread_groups.front().emplace_back(std::thread(
-                [&]() { entry_exit_worker(input_queue, tblocks.front(), print_queue); }));
+                [&]() { entry_exit_worker(input_queue, tblocks.front(), output_queue); }));
         }
     } else {
         thread_groups.resize(tblocks.size());
@@ -240,7 +244,7 @@ void engine::start() {
                 }));
             }
             thread_groups.back().emplace_back(std::thread(
-                [&]() { exit_worker(block_queues.back(), tblocks.back(), print_queue); }));
+                [&]() { exit_worker(block_queues.back(), tblocks.back(), output_queue); }));
         }
     }
 }
@@ -259,7 +263,7 @@ void engine::cleanup() {
         }
     }
 
-    print_queue.set_eof();
+    output_queue.set_eof();
 
     if (print_thread.joinable()) {
         print_thread.join();
