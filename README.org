@@ -5,16 +5,15 @@ csvm is a multithreaded csv manipulation tool written in C++.
 
 * Current status
 - Needs a C++17 compiler.
-- I've only tried it on a single 1.5GB csv file (or subsets of it),  so it may or may not work with your file.  
-- It currently doesn't have unit tests.
-- Currently needs file input, and always prints to stdout, stdin and file-output support will be added later.
+- Provides a simple high level scripting language for defining manipulations, implemented using the [[https://github.com/taocpp/PEGTL][PEGTL]] framework.
+- Has partial unit test coverage using the [[https://github.com/catchorg/Catch2][Catch2]] framework.
 - Tested on Fedora and Manjaro,  but should run on most Linux based OS,  might need some changes to be able to run on other OS.
 - Currently needs explicit to_num and to_str conversions for numeric comparisons or numeric sort, will be improved later.
 * Features
 It only a few things it can do on csv files currently,  but adding additional features should be straight forward.  The commands it has currently are:
 - cols :: to rearrange the columns in the file.
 - select :: to keep some of the rows based on some criteria and filter out the rest.
-- sort :: to sort the file based on some conditions.
+- sort :: to sort the file based on some conditions. uses tmp files for very large files.
 
 You can provide multiple commands in a single run of csvm.  It currently expects the first line of the file to be a header line.  Later there might be a command to specify it.
 * Build instructions
@@ -35,15 +34,15 @@ make
 make install
 #+end_src
 * Usage examples
-- Keep only these columns in this order, drop the rest:
+- Read from stdin, keep only 3 columns in given order, drop the rest, write to stdout:
 #+begin_src bash
-csvm -f input.csv "cols(id, fieldA, countZ)"
+cat input.csv | csvm "cols(id, fieldA, countZ)"
 #+end_src
-- Drop these columns, keep the rest:
+- Read from stdin, drop these columns, keep the rest, write to file:
 #+begin_src bash
-csvm -f input.csv "!cols(fieldA)"
+cat input.csv | csvm -o output.csv "!cols(fieldA)"
 #+end_src
-- Keep only rows that match criteria:
+- Read from file, keep only rows that match criteria, write to stdout:
 #+begin_src bash
 csvm -f input.csv "select(fieldA == 't' && countZ != '0')"
 #+end_src
