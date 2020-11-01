@@ -17,7 +17,7 @@ merge_chunk::merge_chunk(const cli_args &args,
     : args(args), fetch_task_queue(fetch_task_queue) {
     src = disk;
     auto fnum = filenum.fetch_add(1);
-    tmp_filename = args.in_filename;
+    tmp_filename = std::string("tmp.") + args.in_filename;
     std::replace(tmp_filename.begin(), tmp_filename.end(), '/', '.');
     tmp_filename += "." + std::to_string(getpid()) + "." + std::to_string(fnum) + "~";
 
@@ -48,6 +48,9 @@ void merge_chunk::write(sorted_rows &r) {
         models::append_to_string(out_buffer, row.m_row);
     }
     fs.write(out_buffer.c_str(), out_buffer.size());
+    if (fs.bad()) {
+	throw std::runtime_error(std::string("write to temp file '") + tmp_filename + "' failed");
+    }
 }
 
 void merge_chunk::finish_writing() {

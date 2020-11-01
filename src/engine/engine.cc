@@ -110,9 +110,18 @@ void output_worker(threading::queue<models::raw_chunk> &queue, const std::string
     while (chunk.has_value()) {
         if (chunk->id == next) {
             fs.write(chunk->data.c_str(), chunk->data.length());
+            if (fs.bad()) {
+                throw std::runtime_error(std::string("unable to write to output file '") +
+                                         out_filename + "'");
+            }
+
             ++next;
             while (items.count(next) > 0) {
                 fs.write(items.at(next).c_str(), items.at(next).length());
+                if (fs.bad()) {
+                    throw std::runtime_error(std::string("unable to write to output file '") +
+                                             out_filename + "'");
+                }
                 // TODO:  reusing strings helps avoid reallocation
                 // probably has an impact only in super large files.
                 items.erase(next);
