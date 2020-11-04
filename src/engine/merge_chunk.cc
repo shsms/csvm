@@ -49,7 +49,7 @@ void merge_chunk::write(sorted_rows &r) {
     }
     fs.write(out_buffer.c_str(), out_buffer.size());
     if (fs.bad()) {
-	throw std::runtime_error(std::string("write to temp file '") + tmp_filename + "' failed");
+        throw std::runtime_error(std::string("write to temp file '") + tmp_filename + "' failed");
     }
 }
 

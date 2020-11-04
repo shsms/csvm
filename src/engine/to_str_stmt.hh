@@ -11,7 +11,7 @@ class to_str_stmt : public stmt {
     std::vector<int> col_pos;
 
   public:
-    to_str_stmt(const cli_args &args) {}
+    to_str_stmt(const cli_args & /*args*/) {}
     void add_ident(const std::string &col) override;
     std::string string() override;
 

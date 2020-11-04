@@ -1,6 +1,6 @@
 #include <fstream>
-#include <string>
 #include <iostream>
+#include <string>
 
 std::string next_chunk(std::fstream &file, uint64_t max_chunk_size) {
     std::string chunk;

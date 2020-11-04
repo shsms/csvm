@@ -9,10 +9,8 @@ cli_args parse_args(int argc, char *argv[]) {
 
     CLI::App app;
 
-    app.add_option("-f", args.in_filename,
-                   "input csv filename.  defaults to /dev/stdin");
-    app.add_option("-o", args.out_filename,
-		   "output filename.  defaults to /dev/stdout");
+    app.add_option("-f", args.in_filename, "input csv filename.  defaults to /dev/stdin");
+    app.add_option("-o", args.out_filename, "output filename.  defaults to /dev/stdout");
     app.add_option("script", args.script, "script to execute")->required();
     app.add_option("-t,--temp-dir", args.temp_dir,
                    std::string("dir to create tmp files in.  Default is ") +
@@ -36,14 +34,14 @@ cli_args parse_args(int argc, char *argv[]) {
     if (args.thread_count <= 0) {
         args.thread_count = 1;
     }
-    if (args.temp_dir == "") {
+    if (args.temp_dir.empty()) {
         args.temp_dir = stdfs::temp_directory_path().string();
     }
-    if (args.in_filename == "") {
-	args.in_filename = "/dev/stdin";
+    if (args.in_filename.empty()) {
+        args.in_filename = "/dev/stdin";
     }
-    if (args.out_filename == "") {
-	args.out_filename = "/dev/stdout";
+    if (args.out_filename.empty()) {
+        args.out_filename = "/dev/stdout";
     }
 
     return args;
