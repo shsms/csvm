@@ -5,10 +5,12 @@ csvm is a multithreaded csv manipulation tool written in C++.
 
 * Current status
 - Needs a C++17 compiler.
+- Currently works only on ASCII input.
 - Provides a simple high level scripting language for defining manipulations, implemented using the [[https://github.com/taocpp/PEGTL][PEGTL]] framework.
 - Has partial unit test coverage using the [[https://github.com/catchorg/Catch2][Catch2]] framework.
 - Tested on Fedora and Manjaro,  but should run on most Linux based OS,  might need some changes to be able to run on other OS.
 - Currently needs explicit to_num and to_str conversions for numeric comparisons or numeric sort, will be improved later.
+- Some benchmarks [[benchmarks.org][here]].
 * Features
 It only a few things it can do on csv files currently,  but adding additional features should be straight forward.  The commands it has currently are:
 - cols :: to rearrange the columns in the file.

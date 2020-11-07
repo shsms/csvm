@@ -84,3 +84,7 @@ tidy-fix: format
 
 init:
 	git submodule update --init --recursive vendor/*
+
+
+benchmark:
+	bash run_benchmarks.bash
